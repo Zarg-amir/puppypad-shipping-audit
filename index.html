@@ -12,9 +12,7 @@
                 box-sizing: border-box;
             }
             body {
-                font-family:
-                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                    sans-serif;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                 background: linear-gradient(135deg, #f3e7ff 0%, #e0f2fe 100%);
                 min-height: 100vh;
                 padding: 2rem;
@@ -115,16 +113,6 @@
                 opacity: 0.5;
                 cursor: not-allowed;
             }
-            .log-box {
-                background: #f9fafb;
-                border: 2px solid #e5e7eb;
-                border-radius: 0.5rem;
-                padding: 1rem;
-                max-height: 200px;
-                overflow-y: auto;
-                margin: 1rem 0;
-                font-size: 0.875rem;
-            }
             .console-log {
                 background: #1f2937;
                 color: #9ca3af;
@@ -135,6 +123,7 @@
                 overflow-y: auto;
                 font-family: "Courier New", monospace;
                 font-size: 0.75rem;
+                margin: 1rem 0;
             }
             .console-line {
                 margin-bottom: 0.25rem;
@@ -147,9 +136,6 @@
             }
             .console-error {
                 color: #ef4444;
-            }
-            .console-warning {
-                color: #f59e0b;
             }
             .results-grid {
                 display: grid;
@@ -219,83 +205,44 @@
         <div class="container">
             <div class="card">
                 <div class="header">
-                    <div class="icon">⚡</div>
+                    <div class="icon">🤖</div>
                     <div>
                         <h1>PuppyPad Shipping Auditor</h1>
                         <div class="subtitle">
-                            ⚡ Fast Mode - Powered by OpenAI GPT-4o-mini
+                            🤖 AI-Powered - Let GPT-4o-mini Do All The Work
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Shipping Line Charges Excel File</label>
-                    <div
-                        class="file-upload"
-                        id="ratesUpload"
-                        onclick="document.getElementById('ratesFile').click()"
-                    >
-                        <span id="ratesLabel"
-                            >📁 Click to upload Excel file</span
-                        >
+                    <div class="file-upload" id="ratesUpload" onclick="document.getElementById('ratesFile').click()">
+                        <span id="ratesLabel">📁 Click to upload Excel file</span>
                     </div>
-                    <input
-                        type="file"
-                        id="ratesFile"
-                        accept=".xlsx,.xls"
-                        style="display: none"
-                        onchange="handleFileSelect('rates')"
-                    />
+                    <input type="file" id="ratesFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('rates')" />
                 </div>
                 <div class="form-group">
                     <label>Exchange Rate (CNY to USD)</label>
-                    <input
-                        type="number"
-                        id="exchangeRate"
-                        value="6.9"
-                        step="0.01"
-                    />
+                    <input type="number" id="exchangeRate" value="6.9" step="0.01" />
                 </div>
                 <div class="form-group">
                     <label>Mrek Orders Excel File</label>
-                    <div
-                        class="file-upload"
-                        id="ordersUpload"
-                        onclick="document.getElementById('ordersFile').click()"
-                    >
-                        <span id="ordersLabel"
-                            >📁 Click to upload Excel file</span
-                        >
+                    <div class="file-upload" id="ordersUpload" onclick="document.getElementById('ordersFile').click()">
+                        <span id="ordersLabel">📁 Click to upload Excel file</span>
                     </div>
-                    <input
-                        type="file"
-                        id="ordersFile"
-                        accept=".xlsx,.xls"
-                        style="display: none"
-                        onchange="handleFileSelect('orders')"
-                    />
+                    <input type="file" id="ordersFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('orders')" />
                 </div>
                 <div id="errorBox" class="error-box hidden"></div>
-                <div id="logBox" class="log-box hidden"></div>
                 <div id="consoleBox" class="console-log hidden">
-                    <div
-                        style="
-                            border-bottom: 1px solid #374151;
-                            padding-bottom: 0.5rem;
-                            margin-bottom: 0.5rem;
-                            color: #d1d5db;
-                        "
-                    >
-                        Debug Console
+                    <div style="border-bottom: 1px solid #374151; padding-bottom: 0.5rem; margin-bottom: 0.5rem; color: #d1d5db;">
+                        AI Progress
                     </div>
                     <div id="consoleContent"></div>
                 </div>
                 <div id="progressBox" class="progress-box hidden">
-                    <div class="progress-text" id="progressText">
-                        Initializing...
-                    </div>
+                    <div class="progress-text" id="progressText">Initializing...</div>
                 </div>
                 <button id="analyzeBtn" onclick="analyzeOrders()">
-                    ⚡ Analyze Shipping Costs (Fast Mode)
+                    🤖 Let AI Analyze Everything
                 </button>
             </div>
             <div id="resultsContainer" class="hidden"></div>
@@ -303,6 +250,7 @@
         <script>
             let ratesData = null;
             let ordersData = null;
+            
             function handleFileSelect(type) {
                 const input = document.getElementById(type + "File");
                 const file = input.files[0];
@@ -318,61 +266,39 @@
                     });
                     if (type === "rates") {
                         ratesData = jsonData;
-                        document
-                            .getElementById("ratesUpload")
-                            .classList.add("has-file");
-                        document.getElementById("ratesLabel").innerHTML =
-                            `<span class="file-name">${file.name}</span>`;
+                        document.getElementById("ratesUpload").classList.add("has-file");
+                        document.getElementById("ratesLabel").innerHTML = `<span class="file-name">${file.name}</span>`;
                     } else {
                         ordersData = jsonData;
-                        document
-                            .getElementById("ordersUpload")
-                            .classList.add("has-file");
-                        document.getElementById("ordersLabel").innerHTML =
-                            `<span class="file-name">${file.name}</span>`;
+                        document.getElementById("ordersUpload").classList.add("has-file");
+                        document.getElementById("ordersLabel").innerHTML = `<span class="file-name">${file.name}</span>`;
                     }
-                    addConsoleLog(
-                        `✅ Loaded ${jsonData.length} rows from ${file.name}`,
-                        "success",
-                    );
+                    addConsoleLog(`✅ Loaded ${jsonData.length} rows from ${file.name}`, "success");
                 };
                 reader.readAsArrayBuffer(file);
             }
-            function addLog(message) {
-                const logBox = document.getElementById("logBox");
-                logBox.classList.remove("hidden");
-                logBox.innerHTML += `<div>${message}</div>`;
-                logBox.scrollTop = logBox.scrollHeight;
-            }
+            
             function addConsoleLog(message, type = "info") {
                 const consoleBox = document.getElementById("consoleBox");
-                const consoleContent =
-                    document.getElementById("consoleContent");
+                const consoleContent = document.getElementById("consoleContent");
                 consoleBox.classList.remove("hidden");
                 const time = new Date().toLocaleTimeString();
-                const colorClass =
-                    type === "error"
-                        ? "console-error"
-                        : type === "success"
-                          ? "console-success"
-                          : type === "warning"
-                            ? "console-warning"
-                            : "";
+                const colorClass = type === "error" ? "console-error" : type === "success" ? "console-success" : "";
                 consoleContent.innerHTML += `<div class="console-line"><span class="console-time">${time}</span> <span class="${colorClass}">${message}</span></div>`;
                 consoleBox.scrollTop = consoleBox.scrollHeight;
             }
+            
             function showError(message) {
                 document.getElementById("errorBox").textContent = message;
                 document.getElementById("errorBox").classList.remove("hidden");
             }
+            
             function setProgress(message) {
-                document
-                    .getElementById("progressBox")
-                    .classList.remove("hidden");
+                document.getElementById("progressBox").classList.remove("hidden");
                 document.getElementById("progressText").textContent = message;
             }
+            
             async function callOpenAI(prompt) {
-                addConsoleLog("🤖 Calling OpenAI GPT-4o-mini...");
                 const response = await fetch("/api/openai", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -381,326 +307,123 @@
                         messages: [
                             {
                                 role: "system",
-                                content:
-                                    "You are a data extraction expert. Return only valid JSON, no markdown.",
+                                content: "You are a shipping cost auditor. Analyze data and return ONLY valid JSON with no markdown formatting."
                             },
-                            { role: "user", content: prompt },
+                            { role: "user", content: prompt }
                         ],
                         temperature: 0,
-                        max_tokens: 4000,
+                        max_tokens: 16000,
                     }),
                 });
                 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    addConsoleLog(
-                        `❌ OpenAI API Error: ${response.status} - ${errorText}`,
-                        "error",
-                    );
-                    throw new Error(`OpenAI API failed: ${response.status} - ${errorText}`);
+                    throw new Error(`OpenAI API failed: ${response.status}`);
                 }
                 
                 const data = await response.json();
-                addConsoleLog("✅ OpenAI response received", "success");
                 
-                // FIXED: Check if response has the expected structure
                 if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                    addConsoleLog(`❌ Unexpected API response structure: ${JSON.stringify(data)}`, "error");
-                    
-                    // Check for common error responses
-                    if (data.error) {
-                        throw new Error(`OpenAI Error: ${data.error.message || JSON.stringify(data.error)}`);
-                    }
-                    
-                    throw new Error("Invalid response from OpenAI API - missing choices array. Please check your API key.");
+                    throw new Error("Invalid response from OpenAI");
                 }
                 
                 return data.choices[0].message.content;
             }
+            
             function extractJSON(text) {
-                addConsoleLog("🔍 Extracting JSON from AI response...");
-                let cleaned = text
-                    .replace(/```json\n?/g, "")
-                    .replace(/```\n?/g, "")
-                    .trim();
-                const match = cleaned.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
+                let cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+                const match = cleaned.match(/\{[\s\S]*\}/);
                 if (match) cleaned = match[0];
-                try {
-                    const result = JSON.parse(
-                        cleaned.replace(/[""]/g, '"').replace(/['']/g, "'"),
-                    );
-                    addConsoleLog(`✅ Successfully parsed JSON`, "success");
-                    return result;
-                } catch (e) {
-                    addConsoleLog(`❌ JSON parse error: ${e.message}`, "error");
-                    addConsoleLog(
-                        `Raw text: ${cleaned.substring(0, 200)}...`,
-                        "error",
-                    );
-                    throw new Error(`Failed to parse JSON: ${e.message}`);
-                }
+                return JSON.parse(cleaned.replace(/[""]/g, '"').replace(/['']/g, "'"));
             }
+            
             async function analyzeOrders() {
                 document.getElementById("analyzeBtn").disabled = true;
                 document.getElementById("errorBox").classList.add("hidden");
-                document.getElementById("logBox").innerHTML = "";
                 document.getElementById("consoleContent").innerHTML = "";
                 document.getElementById("resultsContainer").innerHTML = "";
-                document
-                    .getElementById("resultsContainer")
-                    .classList.add("hidden");
-                addConsoleLog(
-                    "🚀 FAST MODE: OpenAI GPT-4o-mini - AI used only 2 times!",
-                    "success",
-                );
+                document.getElementById("resultsContainer").classList.add("hidden");
+                
                 try {
-                    if (!ratesData || !ordersData)
+                    if (!ratesData || !ordersData) {
                         throw new Error("Please upload both Excel files");
-                    const rate = parseFloat(
-                        document.getElementById("exchangeRate").value,
-                    );
-                    if (isNaN(rate) || rate <= 0)
+                    }
+                    
+                    const rate = parseFloat(document.getElementById("exchangeRate").value);
+                    if (isNaN(rate) || rate <= 0) {
                         throw new Error("Invalid exchange rate");
-                    setProgress(
-                        "🤖 AI Call #1: Analyzing rate sheet structure...",
-                    );
-                    addLog("🤖 AI analyzing rate sheet (ONE TIME)...");
-                    addConsoleLog("📊 Sending rate sheet sample to AI...");
-                    const ratesText = ratesData
-                        .slice(0, 100)
-                        .map((row) => row.join("|"))
-                        .join("\n");
-                    const ratesPrompt = `Analyze this shipping rate sheet. Extract ALL weight brackets with costs.
+                    }
+                    
+                    setProgress("🤖 AI is analyzing both files...");
+                    addConsoleLog("🤖 Sending data to GPT-4o-mini for complete analysis...");
+                    
+                    // Convert data to text for AI
+                    const ratesText = ratesData.slice(0, 150).map(row => row.join("|")).join("\n");
+                    const ordersText = ordersData.slice(0, 100).map(row => row.join("|")).join("\n");
+                    
+                    const prompt = `You are analyzing shipping costs. I have two files:
 
-CRITICAL: You must extract EVERY weight range and its corresponding cost. Look for patterns like:
-- "0＜W≤0.1" means minWeight=0, maxWeight=0.1
-- Weight columns paired with price columns
-- Each row typically represents a weight bracket
-
-Data (first 100 rows):
+RATE SHEET (first 150 rows):
 ${ratesText}
 
-Return ONLY valid JSON in this exact format (no markdown, no explanation):
-[{"name":"shipping line name","brackets":[{"minWeight":0,"maxWeight":0.1,"costCNY":100,"details":"0-0.1kg @ ¥100"},{"minWeight":0.1,"maxWeight":0.2,"costCNY":120,"details":"0.1-0.2kg @ ¥120"}]}]
+ORDERS (first 100 rows):
+${ordersText}
 
-Include ALL brackets you find. Each bracket needs: minWeight, maxWeight, costCNY, and details.`;
-                    const ratesJsonRaw = await callOpenAI(ratesPrompt);
-                    let rateSheets = extractJSON(ratesJsonRaw);
+TASK:
+1. Understand the rate sheet structure (it has shipping line name, countries, weight brackets, costs per kg, registration fees)
+2. Understand the orders structure (order ID, country, weight, shipping line, charged CNY, charged USD)
+3. For each order:
+   - Match it to the correct shipping line (ignore prefixes like "云途-", use fuzzy matching on Chinese/English names)
+   - Match it to the correct country's rates
+   - Find the weight bracket
+   - Calculate expected cost: (weight × cost_per_kg) + registration_fee
+   - Convert CNY to USD using exchange rate: ${rate}
+   - Compare charged USD vs expected USD
+   - Categorize as: overcharge (charged > expected), undercharge (charged < expected), accurate (same), or invalid (can't match)
+
+Return ONLY this JSON (no markdown, no explanation):
+{
+  "overcharge": [{"orderId":"123","country":"US","totalWeight":0.5,"chargedCNY":100,"chargedUSD":14.49,"expectedCNY":95,"expectedUSD":13.77,"difference":0.72,"exchangeRate":${rate},"bracket":"0.45-0.7kg @ ¥90/kg + ¥20 reg","shippingLine":"云途..."}],
+  "undercharge": [...],
+  "accurate": [...],
+  "invalid": [{"orderId":"456","country":"UK","totalWeight":0.5,"chargedCNY":100,"chargedUSD":14.49,"reason":"No rate bracket found","expectedCNY":"N/A","expectedUSD":"N/A","difference":"N/A","bracket":"N/A","shippingLine":"..."}]
+}
+
+IMPORTANT:
+- Include ALL orders from the orders file (parse the entire file, not just sample)
+- Use fuzzy matching for shipping line names
+- Match by destination country
+- Calculate: total_cny = (weight × rate_per_kg) + registration_fee
+- Be precise with calculations
+- Return ONLY the JSON object, no other text`;
+
+                    addConsoleLog("⏳ Waiting for AI response (this may take 30-60 seconds)...");
+                    const aiResponse = await callOpenAI(prompt);
                     
-                    // FIXED: Handle when AI returns a single object instead of array
-                    if (!Array.isArray(rateSheets)) {
-                        if (typeof rateSheets === 'object' && rateSheets !== null) {
-                            addConsoleLog(
-                                `⚠️ AI returned object instead of array, wrapping it...`,
-                                "warning",
-                            );
-                            rateSheets = [rateSheets];
-                        } else {
-                            addConsoleLog(
-                                `❌ Expected array but got: ${typeof rateSheets}`,
-                                "error",
-                            );
-                            throw new Error(
-                                "Rate sheet parsing failed - did not return valid data",
-                            );
-                        }
-                    }
-                    const totalBrackets = rateSheets.reduce(
-                        (sum, s) => sum + (s.brackets ? s.brackets.length : 0),
-                        0,
-                    );
-                    addConsoleLog(
-                        `✅ AI extracted ${rateSheets.length} shipping lines with ${totalBrackets} rate brackets`,
-                        "success",
-                    );
+                    addConsoleLog("✅ AI analysis complete! Parsing results...");
+                    const results = extractJSON(aiResponse);
                     
-                    // DEBUG: Show what was extracted
-                    rateSheets.forEach(sheet => {
-                        addConsoleLog(
-                            `   📦 ${sheet.name}: ${sheet.brackets ? sheet.brackets.length : 0} brackets`,
-                            sheet.brackets && sheet.brackets.length > 0 ? "success" : "error"
-                        );
-                    });
+                    addConsoleLog(`✅ Found: ${results.overcharge.length} overcharged, ${results.undercharge.length} undercharged, ${results.accurate.length} accurate, ${results.invalid.length} invalid`, "success");
                     
-                    if (totalBrackets === 0) {
-                        throw new Error("AI failed to extract any pricing brackets from rate sheet. Please check the rate sheet format.");
-                    }
-                    
-                    addLog(`✅ Found ${rateSheets.length} shipping line(s)`);
-                    setProgress(
-                        "🤖 AI Call #2: Detecting order column format...",
-                    );
-                    addLog("🤖 AI detecting order format (ONE TIME)...");
-                    addConsoleLog("🔍 Analyzing order sheet columns...");
-                    const sampleText = ordersData
-                        .slice(0, 6)
-                        .map((row) => row.join("|"))
-                        .join("\n");
-                    const formatPrompt = `Identify column indices in this order data.
-Data: ${sampleText}
-Return JSON: {"orderIdCol":0,"weightCol":1,"cnyCostCol":2,"usdCostCol":3,"shippingLineCol":4}
-Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shipping line. Return ONLY JSON.`;
-                    const formatJsonRaw = await callOpenAI(formatPrompt);
-                    const colMap = extractJSON(formatJsonRaw);
-                    addConsoleLog(
-                        `✅ AI identified columns: Order=${colMap.orderIdCol}, Weight=${colMap.weightCol}, CNY=${colMap.cnyCostCol}, USD=${colMap.usdCostCol}, Line=${colMap.shippingLineCol}`,
-                        "success",
-                    );
-                    setProgress(
-                        "⚡ FAST PARSING: Processing all orders with JavaScript...",
-                    );
-                    addLog(
-                        `⚡ Fast parsing ${ordersData.length - 1} orders...`,
-                    );
-                    addConsoleLog(
-                        "⚡ No more AI calls - pure JavaScript speed!",
-                    );
-                    const allOrders = [];
-                    for (let i = 1; i < ordersData.length; i++) {
-                        const row = ordersData[i];
-                        if (!row || !row[colMap.orderIdCol]) continue;
-                        const order = {
-                            orderId: String(
-                                row[colMap.orderIdCol] || "",
-                            ).trim(),
-                            totalWeight: parseFloat(row[colMap.weightCol]) || 0,
-                            chargedCNY: parseFloat(row[colMap.cnyCostCol]) || 0,
-                            chargedUSD: parseFloat(row[colMap.usdCostCol]) || 0,
-                            shippingLine: String(
-                                row[colMap.shippingLineCol] || "",
-                            ).trim(),
-                        };
-                        if (
-                            order.orderId &&
-                            order.totalWeight > 0 &&
-                            order.shippingLine
-                        ) {
-                            allOrders.push(order);
-                        }
-                    }
-                    addConsoleLog(
-                        `✅ Parsed ${allOrders.length} valid orders in milliseconds!`,
-                        "success",
-                    );
-                    addLog(`✅ Extracted ${allOrders.length} orders`);
-                    setProgress(
-                        "⚖️ FAST COMPARISON: Checking all orders against rates...",
-                    );
-                    addLog("⚖️ Comparing all orders...");
-                    addConsoleLog("🔍 Running comparison logic...");
-                    const results = {
-                        overcharge: [],
-                        undercharge: [],
-                        accurate: [],
-                        invalid: [],
-                    };
-                    allOrders.forEach((order) => {
-                        // SAFETY: Check for undefined/null values
-                        const orderLine = (order.shippingLine || '').toLowerCase();
-                        
-                        const sheetData = rateSheets.find(
-                            (sheet) => {
-                                const sheetName = (sheet.name || '').toLowerCase();
-                                return orderLine.includes(sheetName) || sheetName.includes(orderLine);
-                            }
-                        );
-                        
-                        if (!sheetData) {
-                            results.invalid.push({
-                                ...order,
-                                reason: `No rate sheet for: ${order.shippingLine}`,
-                                expectedCNY: "N/A",
-                                expectedUSD: "N/A",
-                                difference: "N/A",
-                                bracket: "N/A",
-                            });
-                            return;
-                        }
-                        
-                        // SAFETY: Check if brackets exist and is an array
-                        if (!sheetData.brackets || !Array.isArray(sheetData.brackets) || sheetData.brackets.length === 0) {
-                            results.invalid.push({
-                                ...order,
-                                reason: `No pricing brackets found for ${sheetData.name}`,
-                                expectedCNY: "N/A",
-                                expectedUSD: "N/A",
-                                difference: "N/A",
-                                bracket: "N/A",
-                            });
-                            return;
-                        }
-                        
-                        const bracket = sheetData.brackets.find(
-                            (b) =>
-                                order.totalWeight > b.minWeight &&
-                                order.totalWeight <= b.maxWeight,
-                        );
-                        
-                        if (!bracket) {
-                            results.invalid.push({
-                                ...order,
-                                reason: `No bracket for ${order.totalWeight}kg in ${sheetData.name}`,
-                                expectedCNY: "N/A",
-                                expectedUSD: "N/A",
-                                difference: "N/A",
-                                bracket: "N/A",
-                            });
-                            return;
-                        }
-                        const expectedCNY = bracket.costCNY;
-                        const expectedUSD = expectedCNY / rate;
-                        const difference = order.chargedUSD - expectedUSD;
-                        const processed = {
-                            ...order,
-                            expectedCNY: expectedCNY.toFixed(2),
-                            expectedUSD: expectedUSD.toFixed(2),
-                            difference: difference.toFixed(2),
-                            exchangeRate: rate,
-                            bracket: bracket.details,
-                        };
-                        if (Math.abs(difference) < 0.01) {
-                            results.accurate.push(processed);
-                        } else if (difference > 0) {
-                            results.overcharge.push(processed);
-                        } else {
-                            results.undercharge.push(processed);
-                        }
-                    });
-                    addLog("✨ Analysis complete!");
-                    addConsoleLog(
-                        `✅ DONE! ${results.overcharge.length} overcharged, ${results.undercharge.length} undercharged, ${results.accurate.length} accurate, ${results.invalid.length} invalid`,
-                        "success",
-                    );
-                    addConsoleLog(
-                        "⚡ Total OpenAI calls: 2 (fast mode!)",
-                        "success",
-                    );
                     displayResults(results);
+                    
                 } catch (error) {
                     showError(error.message);
-                    addLog(`❌ Error: ${error.message}`);
-                    addConsoleLog(`❌ FATAL: ${error.message}`, "error");
+                    addConsoleLog(`❌ Error: ${error.message}`, "error");
                 } finally {
                     document.getElementById("analyzeBtn").disabled = false;
-                    document
-                        .getElementById("progressBox")
-                        .classList.add("hidden");
+                    document.getElementById("progressBox").classList.add("hidden");
                 }
             }
+            
             function displayResults(results) {
                 const container = document.getElementById("resultsContainer");
                 container.classList.remove("hidden");
-                const overchargeTotal = results.overcharge.reduce(
-                    (sum, o) => sum + parseFloat(o.difference),
-                    0,
-                );
-                const underchargeTotal = Math.abs(
-                    results.undercharge.reduce(
-                        (sum, o) => sum + parseFloat(o.difference),
-                        0,
-                    ),
-                );
+                
+                const overchargeTotal = results.overcharge.reduce((sum, o) => sum + parseFloat(o.difference || 0), 0);
+                const underchargeTotal = Math.abs(results.undercharge.reduce((sum, o) => sum + parseFloat(o.difference || 0), 0));
+                
                 window.resultsData = results;
+                
                 container.innerHTML = `
                 <div class="results-grid">
                     <div class="result-card">
@@ -741,14 +464,17 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                 </div>
             `;
             }
+            
             function downloadCSV(type) {
                 const data = window.resultsData[type];
                 if (!data || data.length === 0) {
                     alert("No data to download");
                     return;
                 }
+                
                 const headers = [
                     "Order ID",
+                    "Country",
                     "Total Weight (kg)",
                     "Charged CNY",
                     "Charged USD",
@@ -760,15 +486,14 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                     "Shipping Line",
                     data[0].reason ? "Reason" : "",
                 ].filter(Boolean);
+                
                 let csv = headers.join(",") + "\n";
-                let totalChargedCNY = 0,
-                    totalChargedUSD = 0,
-                    totalExpectedCNY = 0,
-                    totalExpectedUSD = 0,
-                    totalDifference = 0;
+                let totalChargedCNY = 0, totalChargedUSD = 0, totalExpectedCNY = 0, totalExpectedUSD = 0, totalDifference = 0;
+                
                 data.forEach((order) => {
                     const row = [
                         order.orderId,
+                        order.country || "",
                         order.totalWeight,
                         order.chargedCNY,
                         order.chargedUSD,
@@ -781,31 +506,31 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                         order.reason || "",
                     ].filter((_, i) => i < headers.length);
                     csv += row.join(",") + "\n";
+                    
                     if (order.expectedCNY !== "N/A") {
-                        totalChargedCNY += order.chargedCNY;
-                        totalChargedUSD += order.chargedUSD;
-                        totalExpectedCNY += parseFloat(order.expectedCNY);
-                        totalExpectedUSD += parseFloat(order.expectedUSD);
-                        totalDifference += parseFloat(order.difference);
+                        totalChargedCNY += parseFloat(order.chargedCNY) || 0;
+                        totalChargedUSD += parseFloat(order.chargedUSD) || 0;
+                        totalExpectedCNY += parseFloat(order.expectedCNY) || 0;
+                        totalExpectedUSD += parseFloat(order.expectedUSD) || 0;
+                        totalDifference += parseFloat(order.difference) || 0;
                     }
                 });
-                csv +=
-                    "\n" +
-                    [
-                        "TOTAL",
-                        "",
-                        totalChargedCNY.toFixed(2),
-                        totalChargedUSD.toFixed(2),
-                        totalExpectedCNY.toFixed(2),
-                        totalExpectedUSD.toFixed(2),
-                        "",
-                        totalDifference.toFixed(2),
-                        "",
-                        "",
-                        "",
-                    ]
-                        .slice(0, headers.length)
-                        .join(",");
+                
+                csv += "\n" + [
+                    "TOTAL",
+                    "",
+                    "",
+                    totalChargedCNY.toFixed(2),
+                    totalChargedUSD.toFixed(2),
+                    totalExpectedCNY.toFixed(2),
+                    totalExpectedUSD.toFixed(2),
+                    "",
+                    totalDifference.toFixed(2),
+                    "",
+                    "",
+                    "",
+                ].slice(0, headers.length).join(",");
+                
                 const blob = new Blob([csv], { type: "text/csv" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
