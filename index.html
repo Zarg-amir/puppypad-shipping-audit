@@ -6,7 +6,6 @@
         <title>PuppyPad Shipping Auditor</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -44,32 +43,6 @@
                 font-size: 1.25rem;
                 font-weight: 700;
                 color: #1e293b;
-            }
-
-            .share-btn {
-                padding: 0.625rem 1.25rem;
-                background: #3b82f6;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-                font-size: 0.875rem;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
-
-            .share-btn:hover:not(:disabled) {
-                background: #2563eb;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            }
-
-            .share-btn:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
             }
 
             /* Main Content */
@@ -522,9 +495,6 @@
                 <img src="https://cdn.shopify.com/s/files/1/0433/0510/7612/files/navyblue-logo.svg?v=1754231041" alt="PuppyPad Logo" class="navbar-logo">
                 <div class="navbar-title">PuppyPad Shipping Auditor</div>
             </div>
-            <button id="shareBtn" class="share-btn hidden" onclick="shareDashboard(event)">
-                🔗 Share Dashboard
-            </button>
         </nav>
 
         <!-- Main Content -->
@@ -572,10 +542,7 @@
                             <input type="file" id="ordersFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('orders')" />
                         </div>
                         <div class="input-option active" id="orders-link">
-                            <div class="link-input-wrapper">
-                                <input type="text" id="ordersLink" value="https://docs.google.com/spreadsheets/d/1TngHNKi-FWJcvstK0DDd51coh7ndDUQweXDTMSAFdSg/edit?usp=sharing" readonly>
-                                <button class="edit-btn" onclick="toggleEditLink('orders')" title="Edit link">✏️</button>
-                            </div>
+                            <input type="text" id="ordersLink" value="https://docs.google.com/spreadsheets/d/1TngHNKi-FWJcvstK0DDd51coh7ndDUQweXDTMSAFdSg/edit?usp=sharing" readonly style="width: 100%;">
                         </div>
                     </div>
                 </div>
@@ -615,7 +582,6 @@
             // Load Google Sheets on page load
             window.addEventListener('DOMContentLoaded', () => {
                 loadFromURL();
-                loadResultsFromURL();
 
                 // Auto-load default Google Sheets
                 const ratesLink = document.getElementById('ratesLink').value;
@@ -1100,7 +1066,6 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
 
             function displayResults(results) {
                 const container = document.getElementById("resultsContainer");
-                document.getElementById("shareBtn").classList.remove("hidden");
 
                 const overchargeTotal = results.overcharge.reduce((s, o) => s + parseFloat(o.difference), 0);
                 const underchargeTotal = Math.abs(results.undercharge.reduce((s, o) => s + parseFloat(o.difference), 0));
@@ -1460,95 +1425,6 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                 URL.revokeObjectURL(url);
             }
 
-            async function shareDashboard(event) {
-                if (!window.resultsData) {
-                    alert("No results to share");
-                    return;
-                }
-
-                const btn = event.target;
-                const originalText = btn.innerHTML;
-
-                try {
-                    btn.innerHTML = '⏳ Creating link...';
-                    btn.disabled = true;
-
-                    // Compress data using LZ-String (works reliably, no external service needed)
-                    const dataStr = JSON.stringify(window.resultsData);
-                    const compressed = LZString.compressToEncodedURIComponent(dataStr);
-
-                    // Create shareable URL with compressed data in hash
-                    const baseUrl = window.location.href.split('?')[0].split('#')[0];
-                    const shareUrl = `${baseUrl}#share=${compressed}`;
-
-                    // Copy to clipboard
-                    await navigator.clipboard.writeText(shareUrl);
-
-                    btn.innerHTML = '✅ Link Copied!';
-                    btn.style.background = '#10b981';
-
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.style.background = '#3b82f6';
-                        btn.disabled = false;
-                    }, 3000);
-
-                } catch (error) {
-                    console.error('Error creating link:', error);
-                    btn.innerHTML = '❌ Failed';
-                    btn.style.background = '#ef4444';
-
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.style.background = '#3b82f6';
-                        btn.disabled = false;
-                    }, 3000);
-
-                    alert('Failed to create share link: ' + error.message);
-                }
-            }
-
-            async function loadResultsFromURL() {
-                const hash = window.location.hash;
-                if (!hash || !hash.includes('share=')) return;
-
-                try {
-                    // Show loading message
-                    const container = document.getElementById('resultsContainer');
-                    container.innerHTML = `
-                        <div class="card" style="text-align: center; padding: 3rem;">
-                            <div style="font-size: 2rem; margin-bottom: 1rem;">⏳</div>
-                            <div style="font-size: 1.2rem; color: #64748b;">Loading shared dashboard...</div>
-                        </div>
-                    `;
-
-                    // Decompress data from URL hash
-                    const compressed = hash.split('share=')[1];
-                    const dataStr = LZString.decompressFromEncodedURIComponent(compressed);
-
-                    if (!dataStr) {
-                        throw new Error('Invalid share link');
-                    }
-
-                    const results = JSON.parse(dataStr);
-
-                    window.resultsData = results;
-                    displayResults(results);
-
-                    // Hide input section
-                    document.getElementById('inputSection').style.display = 'none';
-                } catch (error) {
-                    console.error('Failed to load snapshot:', error);
-                    const container = document.getElementById('resultsContainer');
-                    container.innerHTML = `
-                        <div class="card" style="text-align: center; padding: 3rem;">
-                            <div style="font-size: 2rem; margin-bottom: 1rem;">❌</div>
-                            <div style="font-size: 1.2rem; color: #ef4444; margin-bottom: 1rem;">Failed to load shared dashboard</div>
-                            <div style="color: #64748b;">The link may be invalid or corrupted.</div>
-                        </div>
-                    `;
-                }
-            }
         </script>
     </body>
 </html>
