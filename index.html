@@ -5,83 +5,163 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>PuppyPad Shipping Auditor</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body {
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                background: linear-gradient(135deg, #f3e7ff 0%, #e0f2fe 100%);
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 50%, #0f1419 100%);
                 min-height: 100vh;
                 padding: 2rem;
+                position: relative;
+                overflow-x: hidden;
             }
-            .container { max-width: 1200px; margin: 0 auto; }
+            body::before {
+                content: '';
+                position: fixed;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle at 20% 50%, rgba(251, 191, 36, 0.1) 0%, transparent 50%),
+                            radial-gradient(circle at 80% 80%, rgba(251, 191, 36, 0.08) 0%, transparent 50%);
+                animation: pulse 15s ease-in-out infinite;
+                pointer-events: none;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 0.5; transform: scale(1); }
+                50% { opacity: 0.8; transform: scale(1.1); }
+            }
+            .container { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
             .card {
-                background: white;
-                border-radius: 1rem;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                background: rgba(20, 25, 45, 0.6);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(251, 191, 36, 0.1);
+                border-radius: 0.5rem;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(251, 191, 36, 0.05);
                 padding: 2rem;
                 margin-bottom: 1.5rem;
             }
             .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
             .icon {
-                width: 3rem; height: 3rem;
-                background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
-                border-radius: 0.75rem;
+                width: 3.5rem; height: 3.5rem;
+                background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                border-radius: 0.375rem;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: white;
-                font-size: 1.5rem;
+                color: #0a0e1a;
+                font-size: 1.75rem;
+                box-shadow: 0 0 20px rgba(251, 191, 36, 0.4), 0 0 40px rgba(251, 191, 36, 0.2);
+                animation: glow 3s ease-in-out infinite;
             }
-            h1 { font-size: 2rem; color: #1f2937; }
-            .subtitle { color: #6b7280; font-size: 0.875rem; }
+            @keyframes glow {
+                0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4), 0 0 40px rgba(251, 191, 36, 0.2); }
+                50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.6), 0 0 60px rgba(251, 191, 36, 0.3); }
+            }
+            h1 {
+                font-size: 2rem;
+                color: #ffffff;
+                font-weight: 800;
+                text-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
+            }
+            .subtitle {
+                color: rgba(251, 191, 36, 0.7);
+                font-size: 0.875rem;
+                font-weight: 500;
+            }
             .form-group { margin-bottom: 1.5rem; }
             label {
                 display: block;
-                font-weight: 500;
-                color: #374151;
+                font-weight: 600;
+                color: rgba(251, 191, 36, 0.9);
                 margin-bottom: 0.5rem;
                 font-size: 0.875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
             }
             input[type="number"] {
                 width: 100%;
-                padding: 0.75rem;
-                border: 2px solid #e5e7eb;
-                border-radius: 0.5rem;
+                padding: 0.75rem 1rem;
+                background: rgba(10, 14, 26, 0.5);
+                border: 1px solid rgba(251, 191, 36, 0.2);
+                border-radius: 0.375rem;
                 font-size: 1rem;
-                transition: border-color 0.2s;
+                color: #ffffff;
+                transition: all 0.3s;
+                font-family: 'Inter', sans-serif;
             }
-            input:focus { outline: none; border-color: #8b5cf6; }
+            input:focus {
+                outline: none;
+                border-color: rgba(251, 191, 36, 0.6);
+                box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1), 0 0 20px rgba(251, 191, 36, 0.2);
+            }
             .file-upload {
-                border: 2px dashed #d1d5db;
-                border-radius: 0.5rem;
+                border: 2px dashed rgba(251, 191, 36, 0.3);
+                border-radius: 0.375rem;
                 padding: 2rem;
                 text-align: center;
                 cursor: pointer;
-                transition: border-color 0.2s;
+                transition: all 0.3s;
+                background: rgba(10, 14, 26, 0.3);
             }
-            .file-upload:hover { border-color: #8b5cf6; }
-            .file-upload.has-file { border-color: #8b5cf6; background: #f3e7ff; }
-            .file-name { color: #8b5cf6; font-weight: 500; }
+            .file-upload:hover {
+                border-color: rgba(251, 191, 36, 0.6);
+                background: rgba(251, 191, 36, 0.05);
+                box-shadow: 0 0 30px rgba(251, 191, 36, 0.1);
+            }
+            .file-upload.has-file {
+                border-color: rgba(251, 191, 36, 0.6);
+                background: rgba(251, 191, 36, 0.1);
+            }
+            .file-name {
+                color: #fbbf24;
+                font-weight: 600;
+            }
             button {
                 width: 100%;
                 padding: 1rem;
-                background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
-                color: white;
+                background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                color: #0a0e1a;
                 border: none;
-                border-radius: 0.5rem;
+                border-radius: 0.375rem;
                 font-size: 1rem;
-                font-weight: 600;
+                font-weight: 700;
                 cursor: pointer;
-                transition: opacity 0.2s;
+                transition: all 0.3s;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
             }
-            button:hover:not(:disabled) { opacity: 0.9; }
-            button:disabled { opacity: 0.5; cursor: not-allowed; }
+            button::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+                transition: left 0.5s;
+            }
+            button:hover:not(:disabled)::before {
+                left: 100%;
+            }
+            button:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 0 30px rgba(251, 191, 36, 0.5);
+            }
+            button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                box-shadow: none;
+            }
             .progress-container {
-                background: white;
-                border-radius: 0.5rem;
+                background: rgba(10, 14, 26, 0.5);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(251, 191, 36, 0.2);
+                border-radius: 0.375rem;
                 padding: 1.5rem;
                 margin: 1rem 0;
-                border: 2px solid #e0d5f7;
             }
             .progress-header {
                 display: flex;
@@ -89,49 +169,77 @@
                 align-items: center;
                 margin-bottom: 1rem;
             }
-            .progress-text { font-weight: 600; color: #7c3aed; font-size: 1rem; }
-            .progress-percentage { font-weight: 700; color: #7c3aed; font-size: 1.5rem; }
+            .progress-text {
+                font-weight: 600;
+                color: #fbbf24;
+                font-size: 1rem;
+            }
+            .progress-percentage {
+                font-weight: 700;
+                color: #fbbf24;
+                font-size: 1.5rem;
+                text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+            }
             .progress-bar-container {
                 width: 100%;
-                height: 8px;
-                background: #e0d5f7;
+                height: 6px;
+                background: rgba(251, 191, 36, 0.1);
                 border-radius: 999px;
                 overflow: hidden;
                 margin-bottom: 0.75rem;
             }
             .progress-bar {
                 height: 100%;
-                background: linear-gradient(90deg, #8b5cf6 0%, #3b82f6 100%);
+                background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
                 border-radius: 999px;
                 transition: width 0.3s ease;
                 width: 0%;
+                box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
             }
-            .progress-status { color: #6b7280; font-size: 0.875rem; }
+            .progress-status {
+                color: rgba(251, 191, 36, 0.7);
+                font-size: 0.875rem;
+            }
             .status-log {
-                background: #f9fafb;
-                border: 1px solid #e5e7eb;
-                border-radius: 0.5rem;
+                background: rgba(10, 14, 26, 0.5);
+                border: 1px solid rgba(251, 191, 36, 0.1);
+                border-radius: 0.375rem;
                 padding: 1rem;
                 max-height: 150px;
                 overflow-y: auto;
                 font-size: 0.813rem;
-                font-family: monospace;
+                font-family: 'JetBrains Mono', 'Courier New', monospace;
                 margin-top: 1rem;
             }
-            .status-line { margin-bottom: 0.25rem; color: #6b7280; }
-            .status-line.success { color: #10b981; }
-            .status-line.error { color: #ef4444; }
+            .status-line {
+                margin-bottom: 0.25rem;
+                color: rgba(255, 255, 255, 0.6);
+            }
+            .status-line.success {
+                color: #10b981;
+            }
+            .status-line.error {
+                color: #ef4444;
+            }
             .results-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
                 gap: 1.5rem;
                 margin-top: 1.5rem;
             }
             .result-card {
-                background: white;
-                border-radius: 0.75rem;
+                background: rgba(20, 25, 45, 0.5);
+                backdrop-filter: blur(15px);
+                border: 1px solid rgba(251, 191, 36, 0.15);
+                border-radius: 0.375rem;
                 padding: 1.5rem;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                transition: all 0.3s;
+            }
+            .result-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(251, 191, 36, 0.1);
+                border-color: rgba(251, 191, 36, 0.3);
             }
             .result-header {
                 display: flex;
@@ -142,27 +250,33 @@
             .result-icon {
                 width: 2.5rem;
                 height: 2.5rem;
-                border-radius: 0.5rem;
+                border-radius: 0.375rem;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-size: 1.25rem;
             }
-            .result-amount { font-size: 1.75rem; font-weight: bold; margin: 0.5rem 0; }
+            .result-amount {
+                font-size: 1.75rem;
+                font-weight: 800;
+                margin: 0.5rem 0;
+            }
             .download-btn {
                 padding: 0.5rem;
-                border-radius: 0.5rem;
+                border-radius: 0.375rem;
                 cursor: pointer;
-                transition: background 0.2s;
+                transition: all 0.3s;
                 width: auto;
+                font-weight: 600;
             }
             .error-box {
-                background: #fef2f2;
-                border: 2px solid #fecaca;
-                color: #991b1b;
+                background: rgba(239, 68, 68, 0.1);
+                border: 1px solid rgba(239, 68, 68, 0.3);
+                color: #fca5a5;
                 padding: 1rem;
-                border-radius: 0.5rem;
+                border-radius: 0.375rem;
                 margin: 1rem 0;
+                backdrop-filter: blur(10px);
             }
             .hidden { display: none; }
             table {
@@ -175,24 +289,28 @@
             }
             th {
                 font-weight: 600;
-                color: #374151;
-                background: #f9fafb;
-                border-bottom: 2px solid #e5e7eb;
+                color: rgba(251, 191, 36, 0.9);
+                background: rgba(251, 191, 36, 0.05);
+                border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
             }
             td {
-                color: #6b7280;
-                border-bottom: 1px solid #e5e7eb;
+                color: rgba(255, 255, 255, 0.8);
+                border-bottom: 1px solid rgba(251, 191, 36, 0.05);
             }
             tr:hover {
-                background: #f3f4f6;
+                background: rgba(251, 191, 36, 0.05);
             }
             .tab-btn:hover {
-                background: #f9fafb;
+                background: rgba(251, 191, 36, 0.1);
             }
             .accordion {
-                background: white;
-                border: 2px solid #e5e7eb;
-                border-radius: 0.75rem;
+                background: rgba(20, 25, 45, 0.4);
+                backdrop-filter: blur(15px);
+                border: 1px solid rgba(251, 191, 36, 0.2);
+                border-radius: 0.375rem;
                 overflow: hidden;
                 margin-bottom: 1.5rem;
             }
@@ -202,29 +320,30 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                background: #f9fafb;
-                transition: background 0.2s;
+                background: rgba(251, 191, 36, 0.05);
+                transition: all 0.3s;
             }
             .accordion-header:hover {
-                background: #f3f4f6;
+                background: rgba(251, 191, 36, 0.1);
             }
             .accordion-header.invalid {
-                background: #fef2f2;
-                border-bottom: 2px solid #fecaca;
+                background: rgba(239, 68, 68, 0.1);
+                border-bottom: 1px solid rgba(239, 68, 68, 0.2);
             }
             .accordion-header.invalid:hover {
-                background: #fee2e2;
+                background: rgba(239, 68, 68, 0.15);
             }
             .accordion-title {
                 display: flex;
                 align-items: center;
                 gap: 0.75rem;
                 font-size: 1.25rem;
-                font-weight: 600;
+                font-weight: 700;
             }
             .accordion-chevron {
                 font-size: 1.5rem;
                 transition: transform 0.3s ease;
+                color: #fbbf24;
             }
             .accordion-chevron.open {
                 transform: rotate(180deg);
@@ -239,11 +358,41 @@
                 padding: 1.5rem;
             }
             .missing-carriers-table {
-                background: #fff7ed;
-                border: 2px solid #fed7aa;
-                border-radius: 0.75rem;
+                background: rgba(217, 119, 6, 0.1);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(251, 191, 36, 0.3);
+                border-radius: 0.375rem;
                 padding: 1.5rem;
                 margin-bottom: 1.5rem;
+            }
+            .table-container {
+                max-height: 500px;
+                overflow-y: auto;
+                border-radius: 0.375rem;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(251, 191, 36, 0.3) rgba(10, 14, 26, 0.3);
+            }
+            .table-container::-webkit-scrollbar {
+                width: 8px;
+            }
+            .table-container::-webkit-scrollbar-track {
+                background: rgba(10, 14, 26, 0.3);
+                border-radius: 4px;
+            }
+            .table-container::-webkit-scrollbar-thumb {
+                background: rgba(251, 191, 36, 0.3);
+                border-radius: 4px;
+            }
+            .table-container::-webkit-scrollbar-thumb:hover {
+                background: rgba(251, 191, 36, 0.5);
+            }
+            h3 {
+                color: rgba(255, 255, 255, 0.9);
+                font-weight: 600;
+            }
+            h2 {
+                color: rgba(255, 255, 255, 0.95);
+                font-weight: 700;
             }
         </style>
     </head>
@@ -251,27 +400,27 @@
         <div class="container">
             <div class="card">
                 <div class="header">
-                    <div class="icon">⚡</div>
+                    <div class="icon">🚀</div>
                     <div>
                         <h1>PuppyPad Shipping Auditor</h1>
-                        <div class="subtitle">⚡ Super Fast - 1 AI Call + Pure JavaScript | v2.0 - Enhanced Errors & Missing Carriers</div>
+                        <div class="subtitle">🚀 Super Fast - 1 AI Call + Pure JavaScript | v3.0 - Dark Glassmorphism</div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Shipping Line Charges Excel File</label>
+                    <label>📊 Shipping Line Charges Excel File</label>
                     <div class="file-upload" id="ratesUpload" onclick="document.getElementById('ratesFile').click()">
-                        <span id="ratesLabel">📁 Click to upload Excel file</span>
+                        <span id="ratesLabel">📄 Click to upload Excel file</span>
                     </div>
                     <input type="file" id="ratesFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('rates')" />
                 </div>
                 <div class="form-group">
-                    <label>Exchange Rate (CNY to USD)</label>
+                    <label>💱 Exchange Rate (CNY to USD)</label>
                     <input type="number" id="exchangeRate" value="6.9" step="0.01" />
                 </div>
                 <div class="form-group">
-                    <label>Mrek Orders Excel File</label>
+                    <label>📦 Mrek Orders Excel File</label>
                     <div class="file-upload" id="ordersUpload" onclick="document.getElementById('ordersFile').click()">
-                        <span id="ordersLabel">📁 Click to upload Excel file</span>
+                        <span id="ordersLabel">📄 Click to upload Excel file</span>
                     </div>
                     <input type="file" id="ordersFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('orders')" />
                 </div>
@@ -287,7 +436,7 @@
                     <div class="progress-status" id="progressStatus">Preparing...</div>
                     <div class="status-log" id="statusLog"></div>
                 </div>
-                <button id="analyzeBtn" onclick="analyzeOrders()">⚡ Analyze All Orders (Super Fast!)</button>
+                <button id="analyzeBtn" onclick="analyzeOrders()">🚀 Analyze All Orders (Super Fast!)</button>
             </div>
             <div id="resultsContainer" class="hidden"></div>
         </div>
@@ -974,12 +1123,13 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
             
             function generateOrderTable(orders, type) {
                 if (orders.length === 0) {
-                    return `<p style="color: #6b7280; text-align: center; padding: 2rem;">No ${type} orders</p>`;
+                    return `<p style="color: rgba(255, 255, 255, 0.6); text-align: center; padding: 2rem;">No ${type} orders</p>`;
                 }
-                
+
                 const isInvalid = type === 'invalid';
-                
+
                 return `
+                    <div class="table-container">
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
                         <thead>
                             <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
@@ -1024,6 +1174,7 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             `).join('')}
                         </tbody>
                     </table>
+                    </div>
                 `;
             }
             
