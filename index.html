@@ -6,6 +6,7 @@
         <title>PuppyPad Shipping Auditor</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1472,31 +1473,18 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                     btn.innerHTML = '⏳ Creating link...';
                     btn.disabled = true;
 
-                    // Use paste.rs - simple, reliable paste service with CORS support
-                    const response = await fetch('https://paste.rs/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'text/plain',
-                        },
-                        body: JSON.stringify(window.resultsData)
-                    });
+                    // Compress data using LZ-String (works reliably, no external service needed)
+                    const dataStr = JSON.stringify(window.resultsData);
+                    const compressed = LZString.compressToEncodedURIComponent(dataStr);
 
-                    if (!response.ok) {
-                        throw new Error('Service unavailable');
-                    }
-
-                    const pasteUrl = await response.text();
-                    // Extract the ID from the URL (e.g., https://paste.rs/abc -> abc)
-                    const pasteId = pasteUrl.trim().split('/').pop();
-
-                    // Create shareable URL with short ID
+                    // Create shareable URL with compressed data in hash
                     const baseUrl = window.location.href.split('?')[0].split('#')[0];
-                    const shareUrl = `${baseUrl}?share=${pasteId}`;
+                    const shareUrl = `${baseUrl}#share=${compressed}`;
 
                     // Copy to clipboard
                     await navigator.clipboard.writeText(shareUrl);
 
-                    btn.innerHTML = '✅ Copied!';
+                    btn.innerHTML = '✅ Link Copied!';
                     btn.style.background = '#10b981';
 
                     setTimeout(() => {
@@ -1521,10 +1509,8 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
             }
 
             async function loadResultsFromURL() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const shareId = urlParams.get('share');
-
-                if (!shareId) return;
+                const hash = window.location.hash;
+                if (!hash || !hash.includes('share=')) return;
 
                 try {
                     // Show loading message
@@ -1536,14 +1522,14 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                         </div>
                     `;
 
-                    // Fetch data from paste.rs
-                    const response = await fetch(`https://paste.rs/${shareId}`);
+                    // Decompress data from URL hash
+                    const compressed = hash.split('share=')[1];
+                    const dataStr = LZString.decompressFromEncodedURIComponent(compressed);
 
-                    if (!response.ok) {
-                        throw new Error('Snapshot not found');
+                    if (!dataStr) {
+                        throw new Error('Invalid share link');
                     }
 
-                    const dataStr = await response.text();
                     const results = JSON.parse(dataStr);
 
                     window.resultsData = results;
@@ -1558,7 +1544,7 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                         <div class="card" style="text-align: center; padding: 3rem;">
                             <div style="font-size: 2rem; margin-bottom: 1rem;">❌</div>
                             <div style="font-size: 1.2rem; color: #ef4444; margin-bottom: 1rem;">Failed to load shared dashboard</div>
-                            <div style="color: #64748b;">The link may be invalid or expired.</div>
+                            <div style="color: #64748b;">The link may be invalid or corrupted.</div>
                         </div>
                     `;
                 }
