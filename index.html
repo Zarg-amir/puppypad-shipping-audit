@@ -165,6 +165,27 @@
                 margin: 1rem 0;
             }
             .hidden { display: none; }
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+            th, td {
+                padding: 0.75rem;
+                text-align: left;
+            }
+            th {
+                font-weight: 600;
+                color: #374151;
+                background: #f9fafb;
+                border-bottom: 2px solid #e5e7eb;
+            }
+            td {
+                color: #6b7280;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            tr:hover {
+                background: #f3f4f6;
+            }
         </style>
     </head>
     <body>
@@ -511,47 +532,197 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
             function displayResults(results) {
                 const container = document.getElementById("resultsContainer");
                 container.classList.remove("hidden");
+                
                 const overchargeTotal = results.overcharge.reduce((s, o) => s + parseFloat(o.difference), 0);
                 const underchargeTotal = Math.abs(results.undercharge.reduce((s, o) => s + parseFloat(o.difference), 0));
+                
+                // Calculate overall accuracy
+                const totalOrders = results.overcharge.length + results.undercharge.length + results.accurate.length + results.invalid.length;
+                const accurateOrders = results.accurate.length;
+                const accuracyPercentage = totalOrders > 0 ? ((accurateOrders / totalOrders) * 100).toFixed(1) : 0;
+                
+                // Top 10 overcharged orders
+                const top10Overcharged = [...results.overcharge]
+                    .sort((a, b) => parseFloat(b.difference) - parseFloat(a.difference))
+                    .slice(0, 10);
+                
+                // Country breakdown for overcharges
+                const countryCounts = {};
+                results.overcharge.forEach(o => {
+                    countryCounts[o.country] = (countryCounts[o.country] || 0) + 1;
+                });
+                const topCountries = Object.entries(countryCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+                
+                // Invalid reasons breakdown
+                const invalidReasons = {};
+                results.invalid.forEach(o => {
+                    const reason = o.reason.split(':')[0]; // Get main reason
+                    invalidReasons[reason] = (invalidReasons[reason] || 0) + 1;
+                });
+                
                 window.resultsData = results;
+                
                 container.innerHTML = `
-                <div class="results-grid">
-                    <div class="result-card">
-                        <div class="result-header">
-                            <div class="result-icon" style="background: #fee2e2; color: #dc2626;">📈</div>
-                            <button class="download-btn" onclick="downloadCSV('overcharge')" style="background: #fee2e2; color: #dc2626;">💾</button>
+                    <!-- Summary Cards -->
+                    <div class="results-grid" style="margin-bottom: 2rem;">
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-icon" style="background: #fee2e2; color: #dc2626;">📈</div>
+                            </div>
+                            <h3>Overcharged</h3>
+                            <div class="result-amount" style="color: #dc2626;">$${overchargeTotal.toFixed(2)}</div>
+                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">${results.overcharge.length} orders</div>
+                            <button class="download-btn" onclick="downloadCSV('overcharge')" style="background: #fee2e2; color: #dc2626; width: 100%; padding: 0.5rem; font-weight: 600;">
+                                📥 Download File
+                            </button>
                         </div>
-                        <h3>Overcharged</h3>
-                        <div class="result-amount" style="color: #dc2626;">$${overchargeTotal.toFixed(2)}</div>
-                        <div style="color: #6b7280; font-size: 0.875rem;">${results.overcharge.length} orders</div>
-                    </div>
-                    <div class="result-card">
-                        <div class="result-header">
-                            <div class="result-icon" style="background: #d1fae5; color: #059669;">📉</div>
-                            <button class="download-btn" onclick="downloadCSV('undercharge')" style="background: #d1fae5; color: #059669;">💾</button>
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-icon" style="background: #d1fae5; color: #059669;">📉</div>
+                            </div>
+                            <h3>Undercharged</h3>
+                            <div class="result-amount" style="color: #059669;">$${underchargeTotal.toFixed(2)}</div>
+                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">${results.undercharge.length} orders</div>
+                            <button class="download-btn" onclick="downloadCSV('undercharge')" style="background: #d1fae5; color: #059669; width: 100%; padding: 0.5rem; font-weight: 600;">
+                                📥 Download File
+                            </button>
                         </div>
-                        <h3>Undercharged</h3>
-                        <div class="result-amount" style="color: #059669;">$${underchargeTotal.toFixed(2)}</div>
-                        <div style="color: #6b7280; font-size: 0.875rem;">${results.undercharge.length} orders</div>
-                    </div>
-                    <div class="result-card">
-                        <div class="result-header">
-                            <div class="result-icon" style="background: #dbeafe; color: #2563eb;">✓</div>
-                            <button class="download-btn" onclick="downloadCSV('accurate')" style="background: #dbeafe; color: #2563eb;">💾</button>
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-icon" style="background: #dbeafe; color: #2563eb;">✓</div>
+                            </div>
+                            <h3>Accurate</h3>
+                            <div class="result-amount" style="color: #2563eb;">${results.accurate.length}</div>
+                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">orders correctly charged</div>
+                            <button class="download-btn" onclick="downloadCSV('accurate')" style="background: #dbeafe; color: #2563eb; width: 100%; padding: 0.5rem; font-weight: 600;">
+                                📥 Download File
+                            </button>
                         </div>
-                        <h3>Accurate</h3>
-                        <div class="result-amount" style="color: #2563eb;">100%</div>
-                        <div style="color: #6b7280; font-size: 0.875rem;">${results.accurate.length} orders</div>
-                    </div>
-                    <div class="result-card">
-                        <div class="result-header">
-                            <div class="result-icon" style="background: #f3f4f6; color: #6b7280;">⚠</div>
-                            <button class="download-btn" onclick="downloadCSV('invalid')" style="background: #f3f4f6; color: #6b7280;">💾</button>
+                        <div class="result-card">
+                            <div class="result-header">
+                                <div class="result-icon" style="background: #f3f4f6; color: #6b7280;">⚠</div>
+                            </div>
+                            <h3>Invalid</h3>
+                            <div class="result-amount" style="color: #6b7280;">${results.invalid.length}</div>
+                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">orders with issues</div>
+                            <button class="download-btn" onclick="downloadCSV('invalid')" style="background: #f3f4f6; color: #6b7280; width: 100%; padding: 0.5rem; font-weight: 600;">
+                                📥 Download File
+                            </button>
                         </div>
-                        <h3>Invalid</h3>
-                        <div style="color: #6b7280; font-size: 0.875rem; margin-top: 1rem;">${results.invalid.length} orders</div>
                     </div>
-                </div>`;
+                    
+                    <!-- Overall Accuracy Card -->
+                    <div class="card" style="background: linear-gradient(135deg, #f3e7ff 0%, #e0f2fe 100%); border: 2px solid #8b5cf6; margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="color: #7c3aed; margin-bottom: 0.5rem;">Overall Accuracy</h2>
+                                <p style="color: #6b7280; font-size: 0.875rem;">${accurateOrders} out of ${totalOrders} orders were correctly charged</p>
+                            </div>
+                            <div style="font-size: 3rem; font-weight: bold; color: #7c3aed;">${accuracyPercentage}%</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Top 10 Overcharged Orders -->
+                    ${top10Overcharged.length > 0 ? `
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <h2 style="color: #1f2937; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">🔥</span> Top 10 Overcharged Orders
+                        </h2>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                                <thead>
+                                    <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Order #</th>
+                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Country</th>
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Weight (kg)</th>
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Charged (USD)</th>
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Charged (CNY)</th>
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Expected (USD)</th>
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Expected (CNY)</th>
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Overcharge</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${top10Overcharged.map((order, idx) => `
+                                        <tr style="border-bottom: 1px solid #e5e7eb; ${idx % 2 === 0 ? 'background: #f9fafb;' : ''}">
+                                            <td style="padding: 0.75rem; font-weight: 500; color: #7c3aed;">${order.orderId}</td>
+                                            <td style="padding: 0.75rem; color: #6b7280;">${order.country}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">${order.totalWeight}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.chargedUSD}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">¥${order.chargedCNY}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.expectedUSD}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">¥${order.expectedCNY}</td>
+                                            <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #dc2626;">+$${order.difference}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Country Breakdown -->
+                    ${topCountries.length > 0 ? `
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <h2 style="color: #1f2937; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">🌍</span> Overcharges by Country
+                        </h2>
+                        <div style="display: grid; gap: 0.75rem;">
+                            ${topCountries.map(([country, count]) => {
+                                const countryTotal = results.overcharge
+                                    .filter(o => o.country === country)
+                                    .reduce((sum, o) => sum + parseFloat(o.difference), 0);
+                                return `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f9fafb; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                                        <div>
+                                            <div style="font-weight: 600; color: #1f2937;">${country}</div>
+                                            <div style="font-size: 0.875rem; color: #6b7280;">${count} orders overcharged</div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-weight: 700; font-size: 1.25rem; color: #dc2626;">$${countryTotal.toFixed(2)}</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">total overcharge</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Invalid Orders Summary -->
+                    ${results.invalid.length > 0 ? `
+                    <div class="card" style="margin-bottom: 2rem; border: 2px solid #fecaca; background: #fef2f2;">
+                        <h2 style="color: #991b1b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">⚠️</span> Invalid Orders Summary
+                        </h2>
+                        <p style="color: #6b7280; margin-bottom: 1rem;">
+                            ${results.invalid.length} orders couldn't be matched to rates. Here's why:
+                        </p>
+                        <div style="display: grid; gap: 0.75rem;">
+                            ${Object.entries(invalidReasons).map(([reason, count]) => `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: white; border-radius: 0.5rem; border: 1px solid #fecaca;">
+                                    <div style="font-weight: 500; color: #991b1b;">${reason}</div>
+                                    <div style="background: #fecaca; color: #991b1b; padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 600; font-size: 0.875rem;">
+                                        ${count} orders
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 0.5rem; border: 1px solid #fecaca;">
+                            <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                                <strong>What this means:</strong>
+                            </p>
+                            <ul style="color: #6b7280; font-size: 0.875rem; margin-left: 1.5rem; line-height: 1.6;">
+                                <li><strong>Line mismatch:</strong> Order shipping line doesn't match rate sheet</li>
+                                <li><strong>No rates for [country]:</strong> Rate sheet missing pricing for this destination</li>
+                                <li><strong>No bracket for [weight]:</strong> Order weight outside available rate brackets</li>
+                            </ul>
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
             }
             
             function downloadCSV(type) {
