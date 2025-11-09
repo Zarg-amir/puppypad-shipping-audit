@@ -471,9 +471,19 @@
                         .map((row) => row.join("|"))
                         .join("\n");
                     const ratesPrompt = `Analyze this shipping rate sheet. Extract ALL weight brackets with costs.
-Data: ${ratesText}
-Return JSON: [{"name":"line name","brackets":[{"minWeight":0,"maxWeight":0.1,"costCNY":100,"details":"0-0.1kg @ ¥100"}]}]
-Parse ranges like "0＜W≤0.1" to minWeight/maxWeight. Return ONLY JSON.`;
+
+CRITICAL: You must extract EVERY weight range and its corresponding cost. Look for patterns like:
+- "0＜W≤0.1" means minWeight=0, maxWeight=0.1
+- Weight columns paired with price columns
+- Each row typically represents a weight bracket
+
+Data (first 100 rows):
+${ratesText}
+
+Return ONLY valid JSON in this exact format (no markdown, no explanation):
+[{"name":"shipping line name","brackets":[{"minWeight":0,"maxWeight":0.1,"costCNY":100,"details":"0-0.1kg @ ¥100"},{"minWeight":0.1,"maxWeight":0.2,"costCNY":120,"details":"0.1-0.2kg @ ¥120"}]}]
+
+Include ALL brackets you find. Each bracket needs: minWeight, maxWeight, costCNY, and details.`;
                     const ratesJsonRaw = await callOpenAI(ratesPrompt);
                     let rateSheets = extractJSON(ratesJsonRaw);
                     
@@ -503,6 +513,19 @@ Parse ranges like "0＜W≤0.1" to minWeight/maxWeight. Return ONLY JSON.`;
                         `✅ AI extracted ${rateSheets.length} shipping lines with ${totalBrackets} rate brackets`,
                         "success",
                     );
+                    
+                    // DEBUG: Show what was extracted
+                    rateSheets.forEach(sheet => {
+                        addConsoleLog(
+                            `   📦 ${sheet.name}: ${sheet.brackets ? sheet.brackets.length : 0} brackets`,
+                            sheet.brackets && sheet.brackets.length > 0 ? "success" : "error"
+                        );
+                    });
+                    
+                    if (totalBrackets === 0) {
+                        throw new Error("AI failed to extract any pricing brackets from rate sheet. Please check the rate sheet format.");
+                    }
+                    
                     addLog(`✅ Found ${rateSheets.length} shipping line(s)`);
                     setProgress(
                         "🤖 AI Call #2: Detecting order column format...",
@@ -572,15 +595,16 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                         invalid: [],
                     };
                     allOrders.forEach((order) => {
+                        // SAFETY: Check for undefined/null values
+                        const orderLine = (order.shippingLine || '').toLowerCase();
+                        
                         const sheetData = rateSheets.find(
-                            (sheet) =>
-                                order.shippingLine
-                                    .toLowerCase()
-                                    .includes(sheet.name.toLowerCase()) ||
-                                sheet.name
-                                    .toLowerCase()
-                                    .includes(order.shippingLine.toLowerCase()),
+                            (sheet) => {
+                                const sheetName = (sheet.name || '').toLowerCase();
+                                return orderLine.includes(sheetName) || sheetName.includes(orderLine);
+                            }
                         );
+                        
                         if (!sheetData) {
                             results.invalid.push({
                                 ...order,
@@ -592,15 +616,30 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                             });
                             return;
                         }
+                        
+                        // SAFETY: Check if brackets exist and is an array
+                        if (!sheetData.brackets || !Array.isArray(sheetData.brackets) || sheetData.brackets.length === 0) {
+                            results.invalid.push({
+                                ...order,
+                                reason: `No pricing brackets found for ${sheetData.name}`,
+                                expectedCNY: "N/A",
+                                expectedUSD: "N/A",
+                                difference: "N/A",
+                                bracket: "N/A",
+                            });
+                            return;
+                        }
+                        
                         const bracket = sheetData.brackets.find(
                             (b) =>
                                 order.totalWeight > b.minWeight &&
                                 order.totalWeight <= b.maxWeight,
                         );
+                        
                         if (!bracket) {
                             results.invalid.push({
                                 ...order,
-                                reason: `No bracket for ${order.totalWeight}kg`,
+                                reason: `No bracket for ${order.totalWeight}kg in ${sheetData.name}`,
                                 expectedCNY: "N/A",
                                 expectedUSD: "N/A",
                                 difference: "N/A",
