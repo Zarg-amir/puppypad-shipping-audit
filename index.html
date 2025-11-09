@@ -186,6 +186,9 @@
             tr:hover {
                 background: #f3f4f6;
             }
+            .tab-btn:hover {
+                background: #f9fafb;
+            }
         </style>
     </head>
     <body>
@@ -555,11 +558,16 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                     .sort((a, b) => b[1] - a[1])
                     .slice(0, 5);
                 
-                // Invalid reasons breakdown
-                const invalidReasons = {};
+                // Invalid reasons breakdown with examples
+                const invalidByReason = {};
                 results.invalid.forEach(o => {
-                    const reason = o.reason.split(':')[0]; // Get main reason
-                    invalidReasons[reason] = (invalidReasons[reason] || 0) + 1;
+                    const reason = o.reason;
+                    if (!invalidByReason[reason]) {
+                        invalidByReason[reason] = [];
+                    }
+                    if (invalidByReason[reason].length < 3) { // Keep up to 3 examples per reason
+                        invalidByReason[reason].push(o);
+                    }
                 });
                 
                 window.resultsData = results;
@@ -574,7 +582,7 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Overcharged</h3>
                             <div class="result-amount" style="color: #dc2626;">$${overchargeTotal.toFixed(2)}</div>
                             <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">${results.overcharge.length} orders</div>
-                            <button class="download-btn" onclick="downloadCSV('overcharge')" style="background: #fee2e2; color: #dc2626; width: 100%; padding: 0.5rem; font-weight: 600;">
+                            <button class="download-btn" onclick="downloadCSV('overcharge')" style="background: #fee2e2; color: #dc2626; width: 100%; padding: 0.5rem; font-weight: 600; border: none; border-radius: 0.5rem; cursor: pointer;">
                                 📥 Download File
                             </button>
                         </div>
@@ -585,7 +593,7 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Undercharged</h3>
                             <div class="result-amount" style="color: #059669;">$${underchargeTotal.toFixed(2)}</div>
                             <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">${results.undercharge.length} orders</div>
-                            <button class="download-btn" onclick="downloadCSV('undercharge')" style="background: #d1fae5; color: #059669; width: 100%; padding: 0.5rem; font-weight: 600;">
+                            <button class="download-btn" onclick="downloadCSV('undercharge')" style="background: #d1fae5; color: #059669; width: 100%; padding: 0.5rem; font-weight: 600; border: none; border-radius: 0.5rem; cursor: pointer;">
                                 📥 Download File
                             </button>
                         </div>
@@ -596,7 +604,7 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Accurate</h3>
                             <div class="result-amount" style="color: #2563eb;">${results.accurate.length}</div>
                             <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">orders correctly charged</div>
-                            <button class="download-btn" onclick="downloadCSV('accurate')" style="background: #dbeafe; color: #2563eb; width: 100%; padding: 0.5rem; font-weight: 600;">
+                            <button class="download-btn" onclick="downloadCSV('accurate')" style="background: #dbeafe; color: #2563eb; width: 100%; padding: 0.5rem; font-weight: 600; border: none; border-radius: 0.5rem; cursor: pointer;">
                                 📥 Download File
                             </button>
                         </div>
@@ -607,7 +615,7 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Invalid</h3>
                             <div class="result-amount" style="color: #6b7280;">${results.invalid.length}</div>
                             <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">orders with issues</div>
-                            <button class="download-btn" onclick="downloadCSV('invalid')" style="background: #f3f4f6; color: #6b7280; width: 100%; padding: 0.5rem; font-weight: 600;">
+                            <button class="download-btn" onclick="downloadCSV('invalid')" style="background: #f3f4f6; color: #6b7280; width: 100%; padding: 0.5rem; font-weight: 600; border: none; border-radius: 0.5rem; cursor: pointer;">
                                 📥 Download File
                             </button>
                         </div>
@@ -691,38 +699,185 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                     </div>
                     ` : ''}
                     
-                    <!-- Invalid Orders Summary -->
+                    <!-- Invalid Orders Summary with Examples -->
                     ${results.invalid.length > 0 ? `
                     <div class="card" style="margin-bottom: 2rem; border: 2px solid #fecaca; background: #fef2f2;">
                         <h2 style="color: #991b1b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="font-size: 1.5rem;">⚠️</span> Invalid Orders Summary
+                            <span style="font-size: 1.5rem;">⚠️</span> Invalid Orders - What Went Wrong
                         </h2>
-                        <p style="color: #6b7280; margin-bottom: 1rem;">
-                            ${results.invalid.length} orders couldn't be matched to rates. Here's why:
+                        <p style="color: #6b7280; margin-bottom: 1.5rem; font-size: 0.95rem;">
+                            ${results.invalid.length} orders couldn't be matched to rates. Here are the specific issues with real examples:
                         </p>
-                        <div style="display: grid; gap: 0.75rem;">
-                            ${Object.entries(invalidReasons).map(([reason, count]) => `
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: white; border-radius: 0.5rem; border: 1px solid #fecaca;">
-                                    <div style="font-weight: 500; color: #991b1b;">${reason}</div>
-                                    <div style="background: #fecaca; color: #991b1b; padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 600; font-size: 0.875rem;">
-                                        ${count} orders
+                        <div style="display: grid; gap: 1.5rem;">
+                            ${Object.entries(invalidByReason).map(([reason, examples]) => {
+                                // Parse reason to get type and details
+                                const reasonParts = reason.split(':');
+                                const reasonType = reasonParts[0].trim();
+                                const reasonDetail = reasonParts.length > 1 ? reasonParts[1].trim() : '';
+                                
+                                return `
+                                    <div style="background: white; border-radius: 0.75rem; border: 2px solid #fecaca; padding: 1.5rem;">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                            <div>
+                                                <h3 style="color: #991b1b; font-size: 1.1rem; margin-bottom: 0.25rem;">${reasonType}</h3>
+                                                ${reasonDetail ? `<p style="color: #6b7280; font-size: 0.875rem;">${reasonDetail}</p>` : ''}
+                                            </div>
+                                            <div style="background: #fecaca; color: #991b1b; padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 600; font-size: 0.875rem;">
+                                                ${invalidByReason[reason].length}+ orders
+                                            </div>
+                                        </div>
+                                        
+                                        <div style="background: #fef9f5; border-left: 3px solid #f59e0b; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+                                            <div style="font-weight: 600; color: #92400e; margin-bottom: 0.75rem; font-size: 0.875rem;">📋 Examples from your data:</div>
+                                            ${examples.map((example, idx) => `
+                                                <div style="margin-bottom: ${idx < examples.length - 1 ? '0.75rem' : '0'}; padding-bottom: ${idx < examples.length - 1 ? '0.75rem' : '0'}; border-bottom: ${idx < examples.length - 1 ? '1px solid #fde68a' : 'none'};">
+                                                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem; font-size: 0.813rem;">
+                                                        <span style="font-weight: 600; color: #92400e;">Order:</span>
+                                                        <span style="color: #6b7280;">${example.orderId}</span>
+                                                        
+                                                        <span style="font-weight: 600; color: #92400e;">Country:</span>
+                                                        <span style="color: #6b7280;">${example.country}</span>
+                                                        
+                                                        <span style="font-weight: 600; color: #92400e;">Weight:</span>
+                                                        <span style="color: #6b7280;">${example.totalWeight} kg</span>
+                                                        
+                                                        <span style="font-weight: 600; color: #92400e;">Shipping Line:</span>
+                                                        <span style="color: #6b7280;">${example.shippingLine}</span>
+                                                        
+                                                        <span style="font-weight: 600; color: #92400e;">Issue:</span>
+                                                        <span style="color: #dc2626; font-weight: 500;">${example.reason}</span>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
                                     </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div style="margin-top: 1rem; padding: 1rem; background: white; border-radius: 0.5rem; border: 1px solid #fecaca;">
-                            <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.5rem;">
-                                <strong>What this means:</strong>
-                            </p>
-                            <ul style="color: #6b7280; font-size: 0.875rem; margin-left: 1.5rem; line-height: 1.6;">
-                                <li><strong>Line mismatch:</strong> Order shipping line doesn't match rate sheet</li>
-                                <li><strong>No rates for [country]:</strong> Rate sheet missing pricing for this destination</li>
-                                <li><strong>No bracket for [weight]:</strong> Order weight outside available rate brackets</li>
-                            </ul>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                     ` : ''}
+                    
+                    <!-- Tabbed Orders View -->
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <h2 style="color: #1f2937; margin-bottom: 1rem;">📊 All Orders - Detailed View</h2>
+                        
+                        <!-- Tab Navigation -->
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0;">
+                            <button onclick="switchTab('overcharge')" id="tab-overcharge" class="tab-btn active-tab" style="padding: 0.75rem 1.5rem; background: none; border: none; border-bottom: 3px solid #dc2626; color: #dc2626; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                Overcharged (${results.overcharge.length})
+                            </button>
+                            <button onclick="switchTab('undercharge')" id="tab-undercharge" class="tab-btn" style="padding: 0.75rem 1.5rem; background: none; border: none; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                Undercharged (${results.undercharge.length})
+                            </button>
+                            <button onclick="switchTab('accurate')" id="tab-accurate" class="tab-btn" style="padding: 0.75rem 1.5rem; background: none; border: none; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                Accurate (${results.accurate.length})
+                            </button>
+                            <button onclick="switchTab('invalid')" id="tab-invalid" class="tab-btn" style="padding: 0.75rem 1.5rem; background: none; border: none; border-bottom: 3px solid transparent; color: #6b7280; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                Invalid (${results.invalid.length})
+                            </button>
+                        </div>
+                        
+                        <!-- Tab Content: Overcharge -->
+                        <div id="content-overcharge" class="tab-content" style="overflow-x: auto;">
+                            ${generateOrderTable(results.overcharge, 'overcharge')}
+                        </div>
+                        
+                        <!-- Tab Content: Undercharge -->
+                        <div id="content-undercharge" class="tab-content" style="display: none; overflow-x: auto;">
+                            ${generateOrderTable(results.undercharge, 'undercharge')}
+                        </div>
+                        
+                        <!-- Tab Content: Accurate -->
+                        <div id="content-accurate" class="tab-content" style="display: none; overflow-x: auto;">
+                            ${generateOrderTable(results.accurate, 'accurate')}
+                        </div>
+                        
+                        <!-- Tab Content: Invalid -->
+                        <div id="content-invalid" class="tab-content" style="display: none; overflow-x: auto;">
+                            ${generateOrderTable(results.invalid, 'invalid')}
+                        </div>
+                    </div>
                 `;
+            }
+            
+            function generateOrderTable(orders, type) {
+                if (orders.length === 0) {
+                    return `<p style="color: #6b7280; text-align: center; padding: 2rem;">No ${type} orders</p>`;
+                }
+                
+                const isInvalid = type === 'invalid';
+                
+                return `
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Order #</th>
+                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Country</th>
+                                <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Weight (kg)</th>
+                                <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Charged (USD)</th>
+                                <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Charged (CNY)</th>
+                                ${!isInvalid ? `
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Expected (USD)</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Expected (CNY)</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Difference</th>
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Bracket</th>
+                                ` : `
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Shipping Line</th>
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Issue</th>
+                                `}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orders.map((order, idx) => `
+                                <tr style="border-bottom: 1px solid #e5e7eb; ${idx % 2 === 0 ? 'background: #f9fafb;' : ''}">
+                                    <td style="padding: 0.75rem; font-weight: 500; color: #7c3aed;">${order.orderId}</td>
+                                    <td style="padding: 0.75rem; color: #6b7280;">${order.country}</td>
+                                    <td style="padding: 0.75rem; text-align: right; color: #6b7280;">${order.totalWeight}</td>
+                                    <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.chargedUSD}</td>
+                                    <td style="padding: 0.75rem; text-align: right; color: #6b7280;">¥${order.chargedCNY}</td>
+                                    ${!isInvalid ? `
+                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.expectedUSD}</td>
+                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">¥${order.expectedCNY}</td>
+                                        <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${parseFloat(order.difference) > 0 ? '#dc2626' : '#059669'};">
+                                            ${parseFloat(order.difference) > 0 ? '+' : ''}$${order.difference}
+                                        </td>
+                                        <td style="padding: 0.75rem; color: #6b7280; font-size: 0.75rem;">${order.bracket}</td>
+                                    ` : `
+                                        <td style="padding: 0.75rem; color: #6b7280; font-size: 0.75rem;">${order.shippingLine}</td>
+                                        <td style="padding: 0.75rem; color: #dc2626; font-size: 0.75rem;">${order.reason}</td>
+                                    `}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+            
+            function switchTab(tabName) {
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                // Remove active styling from all tabs
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.style.borderBottom = '3px solid transparent';
+                    btn.style.color = '#6b7280';
+                });
+                
+                // Show selected tab content
+                document.getElementById(`content-${tabName}`).style.display = 'block';
+                
+                // Add active styling to selected tab
+                const activeTab = document.getElementById(`tab-${tabName}`);
+                const colors = {
+                    overcharge: '#dc2626',
+                    undercharge: '#059669',
+                    accurate: '#2563eb',
+                    invalid: '#6b7280'
+                };
+                activeTab.style.borderBottom = `3px solid ${colors[tabName]}`;
+                activeTab.style.color = colors[tabName];
             }
             
             function downloadCSV(type) {
