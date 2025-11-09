@@ -722,7 +722,7 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <span style="font-size: 1.5rem;">📦</span> Missing Shipping Carriers/Methods - Action Required
                         </h2>
                         <p style="color: #78350f; margin-bottom: 1.5rem; font-size: 0.95rem;">
-                            The following shipping carriers/methods were found in your orders but don't have rate sheets. Please request these rate sheets from Mrek to process these ${missingCarrierMap.size > 0 ? Array.from(missingCarrierMap.values()).reduce((a,b) => a + b.length, 0) : 0} orders.
+                            The following shipping carriers/methods were found in your orders but don't have rate sheets. Please request these rate sheets from Mrek to process these ${results.missingCarriers.reduce((total, item) => total + item.orderCount, 0)} orders.
                         </p>
                         <div style="overflow-x: auto;">
                             <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 0.5rem; overflow: hidden;">
