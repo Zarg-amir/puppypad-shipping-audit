@@ -174,7 +174,7 @@
                     <div class="icon">⚡</div>
                     <div>
                         <h1>PuppyPad Shipping Auditor</h1>
-                        <div class="subtitle">⚡ Lightning Fast - 2 AI Calls + JavaScript</div>
+                        <div class="subtitle">⚡ Super Fast - 1 AI Call + Pure JavaScript</div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -207,7 +207,7 @@
                     <div class="progress-status" id="progressStatus">Preparing...</div>
                     <div class="status-log" id="statusLog"></div>
                 </div>
-                <button id="analyzeBtn" onclick="analyzeOrders()">⚡ Analyze All Orders (Ultra Fast!)</button>
+                <button id="analyzeBtn" onclick="analyzeOrders()">⚡ Analyze All Orders (Super Fast!)</button>
             </div>
             <div id="resultsContainer" class="hidden"></div>
         </div>
@@ -270,10 +270,13 @@
                             { role: "user", content: prompt }
                         ],
                         temperature: 0,
-                        max_tokens: 8000,
+                        max_tokens: 1000,
                     }),
                 });
-                if (!response.ok) throw new Error(`API failed: ${response.status}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API failed: ${response.status} - ${errorText}`);
+                }
                 const data = await response.json();
                 if (!data.choices?.[0]?.message?.content) throw new Error("Invalid API response");
                 return data.choices[0].message.content;
@@ -284,6 +287,16 @@
                 const match = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
                 if (match) cleaned = match[0];
                 return JSON.parse(cleaned);
+            }
+            
+            function parseWeightRange(rangeStr) {
+                if (!rangeStr || typeof rangeStr !== 'string') return null;
+                const match = rangeStr.match(/([\d.]+)[＜<].*?[≤<=]([\d.]+)/);
+                if (!match) return null;
+                return {
+                    minWeight: parseFloat(match[1]),
+                    maxWeight: parseFloat(match[2])
+                };
             }
             
             function normalizeShippingLine(text) {
@@ -308,45 +321,79 @@
                     const exchangeRate = parseFloat(document.getElementById("exchangeRate").value);
                     if (isNaN(exchangeRate) || exchangeRate <= 0) throw new Error("Invalid exchange rate");
                     
-                    updateProgress(5, "🤖 AI Parsing Rate Sheet", "Sending to AI...");
+                    // Step 1: Parse rate sheet with JavaScript (FAST!)
+                    updateProgress(5, "⚡ Parsing Rate Sheet", "Using JavaScript - instant!");
                     addStatusLog(`Rate sheet: ${ratesData.length} rows, Orders: ${ordersData.length} rows`);
+                    addStatusLog("⚡ Parsing rate sheet with pure JavaScript...");
                     
-                    const ratesText = ratesData.map(row => row.join("|")).join("\n");
-                    const ratePrompt = `Parse shipping rates. Extract:
-1. Shipping line name (row 2)
-2. ALL countries with ALL weight brackets
-
-Data:
-${ratesText}
-
-Return JSON:
-{"lineName":"...","countries":{"United States":[{"minWeight":0,"maxWeight":0.1,"costPerKg":100,"regFee":24,"details":"..."}]}}`;
-
-                    addStatusLog("🤖 Calling OpenAI...");
-                    const rateResponse = await callOpenAI(ratePrompt);
-                    updateProgress(20, "✅ Rates Parsed", "AI done");
-                    const rateData = extractJSON(rateResponse);
+                    const shippingLineName = ratesData[1][0] ? String(ratesData[1][0]).trim() : "";
+                    addStatusLog(`Found shipping line: ${shippingLineName}`);
                     
-                    const totalCountries = Object.keys(rateData.countries).length;
-                    const totalBrackets = Object.values(rateData.countries).reduce((s, b) => s + b.length, 0);
-                    addStatusLog(`✅ ${totalCountries} countries, ${totalBrackets} brackets`, "success");
+                    const ratesByCountry = {};
+                    let currentCountry = null;
                     
-                    updateProgress(25, "🤖 Detecting Order Columns", "Quick AI call...");
+                    for (let i = 2; i < ratesData.length; i++) {
+                        const row = ratesData[i];
+                        if (!row || row.length < 6) continue;
+                        
+                        if (row[0] && typeof row[0] === 'string' && row[0].trim()) {
+                            currentCountry = row[0].trim();
+                            ratesByCountry[currentCountry] = [];
+                        }
+                        
+                        const weightRange = row[2];
+                        const costPerKg = row[5];
+                        const regFee = row[6];
+                        
+                        if (currentCountry && weightRange && costPerKg) {
+                            const weights = parseWeightRange(weightRange);
+                            if (weights) {
+                                ratesByCountry[currentCountry].push({
+                                    minWeight: weights.minWeight,
+                                    maxWeight: weights.maxWeight,
+                                    costPerKg: parseFloat(costPerKg),
+                                    regFee: parseFloat(regFee) || 0,
+                                    details: `${weights.minWeight}-${weights.maxWeight}kg @ ¥${costPerKg}/kg + ¥${regFee || 0} reg`
+                                });
+                            }
+                        }
+                    }
+                    
+                    const totalCountries = Object.keys(ratesByCountry).length;
+                    const totalBrackets = Object.values(ratesByCountry).reduce((s, b) => s + b.length, 0);
+                    
+                    updateProgress(20, "✅ Rate Sheet Parsed", `${totalCountries} countries, ${totalBrackets} brackets`);
+                    addStatusLog(`✅ Parsed ${totalCountries} countries with ${totalBrackets} rate brackets`, "success");
+                    
+                    if (totalBrackets === 0) {
+                        throw new Error("No rate brackets found in rate sheet");
+                    }
+                    
+                    // Step 2: Use AI only for column detection (FAST!)
+                    updateProgress(25, "🤖 AI Detecting Columns", "One quick AI call...");
+                    addStatusLog("🤖 Using AI to detect order columns...");
+                    
                     const orderSample = ordersData.slice(0, 3).map(r => r.join("|")).join("\n");
-                    const colPrompt = `Column indices (0-based):
+                    const colPrompt = `Identify column indices (0-based) in this data:
 ${orderSample}
 
-Return JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"usdCostCol":4,"shippingLineCol":5}`;
+Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"usdCostCol":4,"shippingLineCol":5}`;
                     
                     const colResponse = await callOpenAI(colPrompt);
                     const colMap = extractJSON(colResponse);
-                    updateProgress(30, "📊 Parsing Orders", "Extracting...");
-                    addStatusLog(`Columns detected`, "success");
+                    
+                    updateProgress(40, "✅ Columns Detected", "AI analysis complete");
+                    addStatusLog(`✅ Detected: Order=${colMap.orderIdCol}, Country=${colMap.countryCol}, Weight=${colMap.weightCol}`, "success");
+                    
+                    // Step 3: Parse all orders with JavaScript (FAST!)
+                    updateProgress(45, "📊 Parsing Orders", "Extracting all order data...");
+                    addStatusLog("📊 Parsing orders with JavaScript...");
                     
                     const allOrders = [];
                     for (let i = 1; i < ordersData.length; i++) {
                         const row = ordersData[i];
                         if (!row || !row[colMap.orderIdCol]) continue;
+                        
                         allOrders.push({
                             orderId: String(row[colMap.orderIdCol] || "").trim(),
                             country: String(row[colMap.countryCol] || "").trim(),
@@ -357,22 +404,25 @@ Return JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"usdCos
                         });
                     }
                     
-                    updateProgress(40, "✅ Orders Parsed", `${allOrders.length} orders`);
-                    addStatusLog(`✅ ${allOrders.length} orders ready`, "success");
-                    updateProgress(45, "⚡ Matching Orders", "Processing...");
-                    addStatusLog("⚡ JavaScript matching (ultra fast)...");
+                    updateProgress(50, "✅ Orders Parsed", `${allOrders.length} orders ready`);
+                    addStatusLog(`✅ Parsed ${allOrders.length} valid orders from ${ordersData.length} rows`, "success");
+                    
+                    // Step 4: Match orders to rates (FAST!)
+                    updateProgress(55, "⚡ Matching Orders", "Processing at high speed...");
+                    addStatusLog("⚡ Matching orders to rates (JavaScript - blazing fast)...");
                     
                     const results = { overcharge: [], undercharge: [], accurate: [], invalid: [] };
                     const total = allOrders.length;
                     
                     for (let i = 0; i < total; i++) {
                         const order = allOrders[i];
+                        
                         if (i % 100 === 0) {
-                            const percent = 45 + (i / total) * 50;
-                            updateProgress(percent, "⚡ Processing", `${i}/${total} (${Math.round(i/total*100)}%)`);
+                            const percent = 55 + (i / total) * 40;
+                            updateProgress(percent, "⚡ Processing", `${i}/${total} orders (${Math.round(i/total*100)}%)`);
                         }
                         
-                        if (!matchShippingLine(order.shippingLine, rateData.lineName)) {
+                        if (!matchShippingLine(order.shippingLine, shippingLineName)) {
                             results.invalid.push({
                                 ...order,
                                 reason: `Line mismatch: ${order.shippingLine}`,
@@ -384,8 +434,8 @@ Return JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"usdCos
                             continue;
                         }
                         
-                        const countryRates = rateData.countries[order.country];
-                        if (!countryRates) {
+                        const countryRates = ratesByCountry[order.country];
+                        if (!countryRates || countryRates.length === 0) {
                             results.invalid.push({
                                 ...order,
                                 reason: `No rates for ${order.country}`,
@@ -401,7 +451,7 @@ Return JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"usdCos
                         if (!bracket) {
                             results.invalid.push({
                                 ...order,
-                                reason: `No bracket for ${order.totalWeight}kg`,
+                                reason: `No bracket for ${order.totalWeight}kg in ${order.country}`,
                                 expectedCNY: "N/A",
                                 expectedUSD: "N/A",
                                 difference: "N/A",
@@ -428,11 +478,12 @@ Return JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"usdCos
                         else results.undercharge.push(processed);
                     }
                     
-                    updateProgress(100, "✅ Complete!", "Done");
-                    addStatusLog(`✅ Overcharged: ${results.overcharge.length}`, "success");
-                    addStatusLog(`✅ Undercharged: ${results.undercharge.length}`, "success");
-                    addStatusLog(`✅ Accurate: ${results.accurate.length}`, "success");
-                    addStatusLog(`❌ Invalid: ${results.invalid.length}`, results.invalid.length > 0 ? "error" : "success");
+                    updateProgress(100, "✅ Complete!", "All orders processed");
+                    addStatusLog(`✅ DONE! Analysis complete`, "success");
+                    addStatusLog(`📈 Overcharged: ${results.overcharge.length} orders`, results.overcharge.length > 0 ? "error" : "success");
+                    addStatusLog(`📉 Undercharged: ${results.undercharge.length} orders`, results.undercharge.length > 0 ? "error" : "success");
+                    addStatusLog(`✓ Accurate: ${results.accurate.length} orders`, "success");
+                    addStatusLog(`⚠ Invalid: ${results.invalid.length} orders`, results.invalid.length > 0 ? "error" : "success");
                     
                     setTimeout(() => {
                         document.getElementById("progressContainer").classList.add("hidden");
@@ -441,7 +492,8 @@ Return JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"usdCos
                     
                 } catch (error) {
                     showError(error.message);
-                    addStatusLog(`❌ ${error.message}`, "error");
+                    addStatusLog(`❌ Error: ${error.message}`, "error");
+                    updateProgress(0, "❌ Error", error.message);
                 } finally {
                     document.getElementById("analyzeBtn").disabled = false;
                 }
