@@ -330,6 +330,7 @@
                     addStatusLog(`Found shipping line: ${shippingLineName}`);
                     
                     const ratesByCountry = {};
+                    const countryMapping = {}; // Maps normalized -> original
                     let currentCountry = null;
                     
                     for (let i = 2; i < ratesData.length; i++) {
@@ -338,7 +339,9 @@
                         
                         if (row[0] && typeof row[0] === 'string' && row[0].trim()) {
                             currentCountry = row[0].trim();
-                            ratesByCountry[currentCountry] = [];
+                            const normalized = currentCountry.toUpperCase();
+                            ratesByCountry[normalized] = [];
+                            countryMapping[normalized] = currentCountry;
                         }
                         
                         const weightRange = row[2];
@@ -348,7 +351,8 @@
                         if (currentCountry && weightRange && costPerKg) {
                             const weights = parseWeightRange(weightRange);
                             if (weights) {
-                                ratesByCountry[currentCountry].push({
+                                const normalized = currentCountry.toUpperCase();
+                                ratesByCountry[normalized].push({
                                     minWeight: weights.minWeight,
                                     maxWeight: weights.maxWeight,
                                     costPerKg: parseFloat(costPerKg),
@@ -364,6 +368,10 @@
                     
                     updateProgress(20, "✅ Rate Sheet Parsed", `${totalCountries} countries, ${totalBrackets} brackets`);
                     addStatusLog(`✅ Parsed ${totalCountries} countries with ${totalBrackets} rate brackets`, "success");
+                    
+                    // Log found countries for debugging
+                    const countries = Object.keys(countryMapping).map(k => countryMapping[k]).join(", ");
+                    addStatusLog(`Countries: ${countries}`);
                     
                     if (totalBrackets === 0) {
                         throw new Error("No rate brackets found in rate sheet");
@@ -434,7 +442,8 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             continue;
                         }
                         
-                        const countryRates = ratesByCountry[order.country];
+                        const normalizedCountry = order.country.toUpperCase();
+                        const countryRates = ratesByCountry[normalizedCountry];
                         if (!countryRates || countryRates.length === 0) {
                             results.invalid.push({
                                 ...order,
