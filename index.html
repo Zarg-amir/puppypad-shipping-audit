@@ -227,7 +227,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label>Shipping Line Charges Excel File</label>
                     <div
@@ -247,7 +246,6 @@
                         onchange="handleFileSelect('rates')"
                     />
                 </div>
-
                 <div class="form-group">
                     <label>Exchange Rate (CNY to USD)</label>
                     <input
@@ -257,7 +255,6 @@
                         step="0.01"
                     />
                 </div>
-
                 <div class="form-group">
                     <label>Mrek Orders Excel File</label>
                     <div
@@ -277,7 +274,6 @@
                         onchange="handleFileSelect('orders')"
                     />
                 </div>
-
                 <div id="errorBox" class="error-box hidden"></div>
                 <div id="logBox" class="log-box hidden"></div>
                 <div id="consoleBox" class="console-log hidden">
@@ -293,30 +289,24 @@
                     </div>
                     <div id="consoleContent"></div>
                 </div>
-
                 <div id="progressBox" class="progress-box hidden">
                     <div class="progress-text" id="progressText">
                         Initializing...
                     </div>
                 </div>
-
                 <button id="analyzeBtn" onclick="analyzeOrders()">
                     ⚡ Analyze Shipping Costs (Fast Mode)
                 </button>
             </div>
-
             <div id="resultsContainer" class="hidden"></div>
         </div>
-
         <script>
             let ratesData = null;
             let ordersData = null;
-
             function handleFileSelect(type) {
                 const input = document.getElementById(type + "File");
                 const file = input.files[0];
                 if (!file) return;
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const data = new Uint8Array(e.target.result);
@@ -326,7 +316,6 @@
                         header: 1,
                         defval: "",
                     });
-
                     if (type === "rates") {
                         ratesData = jsonData;
                         document
@@ -349,20 +338,17 @@
                 };
                 reader.readAsArrayBuffer(file);
             }
-
             function addLog(message) {
                 const logBox = document.getElementById("logBox");
                 logBox.classList.remove("hidden");
                 logBox.innerHTML += `<div>${message}</div>`;
                 logBox.scrollTop = logBox.scrollHeight;
             }
-
             function addConsoleLog(message, type = "info") {
                 const consoleBox = document.getElementById("consoleBox");
                 const consoleContent =
                     document.getElementById("consoleContent");
                 consoleBox.classList.remove("hidden");
-
                 const time = new Date().toLocaleTimeString();
                 const colorClass =
                     type === "error"
@@ -372,23 +358,19 @@
                           : type === "warning"
                             ? "console-warning"
                             : "";
-
                 consoleContent.innerHTML += `<div class="console-line"><span class="console-time">${time}</span> <span class="${colorClass}">${message}</span></div>`;
                 consoleBox.scrollTop = consoleBox.scrollHeight;
             }
-
             function showError(message) {
                 document.getElementById("errorBox").textContent = message;
                 document.getElementById("errorBox").classList.remove("hidden");
             }
-
             function setProgress(message) {
                 document
                     .getElementById("progressBox")
                     .classList.remove("hidden");
                 document.getElementById("progressText").textContent = message;
             }
-
             async function callOpenAI(prompt) {
                 addConsoleLog("🤖 Calling OpenAI GPT-4o-mini...");
                 const response = await fetch("/api/openai", {
@@ -408,21 +390,33 @@
                         max_tokens: 4000,
                     }),
                 });
-
+                
                 if (!response.ok) {
                     const errorText = await response.text();
                     addConsoleLog(
-                        `❌ OpenAI API Error: ${response.status}`,
+                        `❌ OpenAI API Error: ${response.status} - ${errorText}`,
                         "error",
                     );
-                    throw new Error(`OpenAI API failed: ${response.status}`);
+                    throw new Error(`OpenAI API failed: ${response.status} - ${errorText}`);
                 }
-
+                
                 const data = await response.json();
                 addConsoleLog("✅ OpenAI response received", "success");
+                
+                // FIXED: Check if response has the expected structure
+                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                    addConsoleLog(`❌ Unexpected API response structure: ${JSON.stringify(data)}`, "error");
+                    
+                    // Check for common error responses
+                    if (data.error) {
+                        throw new Error(`OpenAI Error: ${data.error.message || JSON.stringify(data.error)}`);
+                    }
+                    
+                    throw new Error("Invalid response from OpenAI API - missing choices array. Please check your API key.");
+                }
+                
                 return data.choices[0].message.content;
             }
-
             function extractJSON(text) {
                 addConsoleLog("🔍 Extracting JSON from AI response...");
                 let cleaned = text
@@ -431,7 +425,6 @@
                     .trim();
                 const match = cleaned.match(/\[[\s\S]*\]|\{[\s\S]*\}/);
                 if (match) cleaned = match[0];
-
                 try {
                     const result = JSON.parse(
                         cleaned.replace(/[""]/g, '"').replace(/['']/g, "'"),
@@ -447,7 +440,6 @@
                     throw new Error(`Failed to parse JSON: ${e.message}`);
                 }
             }
-
             async function analyzeOrders() {
                 document.getElementById("analyzeBtn").disabled = true;
                 document.getElementById("errorBox").classList.add("hidden");
@@ -457,53 +449,52 @@
                 document
                     .getElementById("resultsContainer")
                     .classList.add("hidden");
-
                 addConsoleLog(
                     "🚀 FAST MODE: OpenAI GPT-4o-mini - AI used only 2 times!",
                     "success",
                 );
-
                 try {
                     if (!ratesData || !ordersData)
                         throw new Error("Please upload both Excel files");
-
                     const rate = parseFloat(
                         document.getElementById("exchangeRate").value,
                     );
                     if (isNaN(rate) || rate <= 0)
                         throw new Error("Invalid exchange rate");
-
                     setProgress(
                         "🤖 AI Call #1: Analyzing rate sheet structure...",
                     );
                     addLog("🤖 AI analyzing rate sheet (ONE TIME)...");
                     addConsoleLog("📊 Sending rate sheet sample to AI...");
-
                     const ratesText = ratesData
                         .slice(0, 100)
                         .map((row) => row.join("|"))
                         .join("\n");
                     const ratesPrompt = `Analyze this shipping rate sheet. Extract ALL weight brackets with costs.
-
 Data: ${ratesText}
-
 Return JSON: [{"name":"line name","brackets":[{"minWeight":0,"maxWeight":0.1,"costCNY":100,"details":"0-0.1kg @ ¥100"}]}]
-
 Parse ranges like "0＜W≤0.1" to minWeight/maxWeight. Return ONLY JSON.`;
-
                     const ratesJsonRaw = await callOpenAI(ratesPrompt);
-                    const rateSheets = extractJSON(ratesJsonRaw);
-
+                    let rateSheets = extractJSON(ratesJsonRaw);
+                    
+                    // FIXED: Handle when AI returns a single object instead of array
                     if (!Array.isArray(rateSheets)) {
-                        addConsoleLog(
-                            `❌ Expected array but got: ${typeof rateSheets}`,
-                            "error",
-                        );
-                        throw new Error(
-                            "Rate sheet parsing failed - did not return an array",
-                        );
+                        if (typeof rateSheets === 'object' && rateSheets !== null) {
+                            addConsoleLog(
+                                `⚠️ AI returned object instead of array, wrapping it...`,
+                                "warning",
+                            );
+                            rateSheets = [rateSheets];
+                        } else {
+                            addConsoleLog(
+                                `❌ Expected array but got: ${typeof rateSheets}`,
+                                "error",
+                            );
+                            throw new Error(
+                                "Rate sheet parsing failed - did not return valid data",
+                            );
+                        }
                     }
-
                     const totalBrackets = rateSheets.reduce(
                         (sum, s) => sum + (s.brackets ? s.brackets.length : 0),
                         0,
@@ -513,32 +504,25 @@ Parse ranges like "0＜W≤0.1" to minWeight/maxWeight. Return ONLY JSON.`;
                         "success",
                     );
                     addLog(`✅ Found ${rateSheets.length} shipping line(s)`);
-
                     setProgress(
                         "🤖 AI Call #2: Detecting order column format...",
                     );
                     addLog("🤖 AI detecting order format (ONE TIME)...");
                     addConsoleLog("🔍 Analyzing order sheet columns...");
-
                     const sampleText = ordersData
                         .slice(0, 6)
                         .map((row) => row.join("|"))
                         .join("\n");
                     const formatPrompt = `Identify column indices in this order data.
-
 Data: ${sampleText}
-
 Return JSON: {"orderIdCol":0,"weightCol":1,"cnyCostCol":2,"usdCostCol":3,"shippingLineCol":4}
-
 Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shipping line. Return ONLY JSON.`;
-
                     const formatJsonRaw = await callOpenAI(formatPrompt);
                     const colMap = extractJSON(formatJsonRaw);
                     addConsoleLog(
                         `✅ AI identified columns: Order=${colMap.orderIdCol}, Weight=${colMap.weightCol}, CNY=${colMap.cnyCostCol}, USD=${colMap.usdCostCol}, Line=${colMap.shippingLineCol}`,
                         "success",
                     );
-
                     setProgress(
                         "⚡ FAST PARSING: Processing all orders with JavaScript...",
                     );
@@ -548,12 +532,10 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                     addConsoleLog(
                         "⚡ No more AI calls - pure JavaScript speed!",
                     );
-
                     const allOrders = [];
                     for (let i = 1; i < ordersData.length; i++) {
                         const row = ordersData[i];
                         if (!row || !row[colMap.orderIdCol]) continue;
-
                         const order = {
                             orderId: String(
                                 row[colMap.orderIdCol] || "",
@@ -565,7 +547,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                                 row[colMap.shippingLineCol] || "",
                             ).trim(),
                         };
-
                         if (
                             order.orderId &&
                             order.totalWeight > 0 &&
@@ -574,26 +555,22 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                             allOrders.push(order);
                         }
                     }
-
                     addConsoleLog(
                         `✅ Parsed ${allOrders.length} valid orders in milliseconds!`,
                         "success",
                     );
                     addLog(`✅ Extracted ${allOrders.length} orders`);
-
                     setProgress(
                         "⚖️ FAST COMPARISON: Checking all orders against rates...",
                     );
                     addLog("⚖️ Comparing all orders...");
                     addConsoleLog("🔍 Running comparison logic...");
-
                     const results = {
                         overcharge: [],
                         undercharge: [],
                         accurate: [],
                         invalid: [],
                     };
-
                     allOrders.forEach((order) => {
                         const sheetData = rateSheets.find(
                             (sheet) =>
@@ -604,7 +581,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                                     .toLowerCase()
                                     .includes(order.shippingLine.toLowerCase()),
                         );
-
                         if (!sheetData) {
                             results.invalid.push({
                                 ...order,
@@ -616,13 +592,11 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                             });
                             return;
                         }
-
                         const bracket = sheetData.brackets.find(
                             (b) =>
                                 order.totalWeight > b.minWeight &&
                                 order.totalWeight <= b.maxWeight,
                         );
-
                         if (!bracket) {
                             results.invalid.push({
                                 ...order,
@@ -634,11 +608,9 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                             });
                             return;
                         }
-
                         const expectedCNY = bracket.costCNY;
                         const expectedUSD = expectedCNY / rate;
                         const difference = order.chargedUSD - expectedUSD;
-
                         const processed = {
                             ...order,
                             expectedCNY: expectedCNY.toFixed(2),
@@ -647,7 +619,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                             exchangeRate: rate,
                             bracket: bracket.details,
                         };
-
                         if (Math.abs(difference) < 0.01) {
                             results.accurate.push(processed);
                         } else if (difference > 0) {
@@ -656,7 +627,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                             results.undercharge.push(processed);
                         }
                     });
-
                     addLog("✨ Analysis complete!");
                     addConsoleLog(
                         `✅ DONE! ${results.overcharge.length} overcharged, ${results.undercharge.length} undercharged, ${results.accurate.length} accurate, ${results.invalid.length} invalid`,
@@ -666,7 +636,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                         "⚡ Total OpenAI calls: 2 (fast mode!)",
                         "success",
                     );
-
                     displayResults(results);
                 } catch (error) {
                     showError(error.message);
@@ -679,11 +648,9 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                         .classList.add("hidden");
                 }
             }
-
             function displayResults(results) {
                 const container = document.getElementById("resultsContainer");
                 container.classList.remove("hidden");
-
                 const overchargeTotal = results.overcharge.reduce(
                     (sum, o) => sum + parseFloat(o.difference),
                     0,
@@ -694,9 +661,7 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                         0,
                     ),
                 );
-
                 window.resultsData = results;
-
                 container.innerHTML = `
                 <div class="results-grid">
                     <div class="result-card">
@@ -708,7 +673,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                         <div class="result-amount" style="color: #dc2626;">$${overchargeTotal.toFixed(2)}</div>
                         <div style="color: #6b7280; font-size: 0.875rem;">${results.overcharge.length} orders</div>
                     </div>
-
                     <div class="result-card">
                         <div class="result-header">
                             <div class="result-icon" style="background: #d1fae5; color: #059669;">📉</div>
@@ -718,7 +682,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                         <div class="result-amount" style="color: #059669;">$${underchargeTotal.toFixed(2)}</div>
                         <div style="color: #6b7280; font-size: 0.875rem;">${results.undercharge.length} orders</div>
                     </div>
-
                     <div class="result-card">
                         <div class="result-header">
                             <div class="result-icon" style="background: #dbeafe; color: #2563eb;">✓</div>
@@ -728,7 +691,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                         <div class="result-amount" style="color: #2563eb;">100%</div>
                         <div style="color: #6b7280; font-size: 0.875rem;">${results.accurate.length} orders</div>
                     </div>
-
                     <div class="result-card">
                         <div class="result-header">
                             <div class="result-icon" style="background: #f3f4f6; color: #6b7280;">⚠</div>
@@ -740,14 +702,12 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                 </div>
             `;
             }
-
             function downloadCSV(type) {
                 const data = window.resultsData[type];
                 if (!data || data.length === 0) {
                     alert("No data to download");
                     return;
                 }
-
                 const headers = [
                     "Order ID",
                     "Total Weight (kg)",
@@ -761,14 +721,12 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                     "Shipping Line",
                     data[0].reason ? "Reason" : "",
                 ].filter(Boolean);
-
                 let csv = headers.join(",") + "\n";
                 let totalChargedCNY = 0,
                     totalChargedUSD = 0,
                     totalExpectedCNY = 0,
                     totalExpectedUSD = 0,
                     totalDifference = 0;
-
                 data.forEach((order) => {
                     const row = [
                         order.orderId,
@@ -784,7 +742,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                         order.reason || "",
                     ].filter((_, i) => i < headers.length);
                     csv += row.join(",") + "\n";
-
                     if (order.expectedCNY !== "N/A") {
                         totalChargedCNY += order.chargedCNY;
                         totalChargedUSD += order.chargedUSD;
@@ -793,7 +750,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                         totalDifference += parseFloat(order.difference);
                     }
                 });
-
                 csv +=
                     "\n" +
                     [
@@ -811,7 +767,6 @@ Column indices (0-based) for: order ID, weight (kg), cost CNY, cost USD, shippin
                     ]
                         .slice(0, headers.length)
                         .join(",");
-
                 const blob = new Blob([csv], { type: "text/csv" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
