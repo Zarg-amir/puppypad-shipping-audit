@@ -6,21 +6,14 @@
         <title>PuppyPad Shipping Auditor</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
             body {
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                 background: linear-gradient(135deg, #f3e7ff 0%, #e0f2fe 100%);
                 min-height: 100vh;
                 padding: 2rem;
             }
-            .container {
-                max-width: 1200px;
-                margin: 0 auto;
-            }
+            .container { max-width: 1200px; margin: 0 auto; }
             .card {
                 background: white;
                 border-radius: 1rem;
@@ -28,15 +21,9 @@
                 padding: 2rem;
                 margin-bottom: 1.5rem;
             }
-            .header {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-                margin-bottom: 2rem;
-            }
+            .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
             .icon {
-                width: 3rem;
-                height: 3rem;
+                width: 3rem; height: 3rem;
                 background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
                 border-radius: 0.75rem;
                 display: flex;
@@ -45,17 +32,9 @@
                 color: white;
                 font-size: 1.5rem;
             }
-            h1 {
-                font-size: 2rem;
-                color: #1f2937;
-            }
-            .subtitle {
-                color: #6b7280;
-                font-size: 0.875rem;
-            }
-            .form-group {
-                margin-bottom: 1.5rem;
-            }
+            h1 { font-size: 2rem; color: #1f2937; }
+            .subtitle { color: #6b7280; font-size: 0.875rem; }
+            .form-group { margin-bottom: 1.5rem; }
             label {
                 display: block;
                 font-weight: 500;
@@ -71,10 +50,7 @@
                 font-size: 1rem;
                 transition: border-color 0.2s;
             }
-            input:focus {
-                outline: none;
-                border-color: #8b5cf6;
-            }
+            input:focus { outline: none; border-color: #8b5cf6; }
             .file-upload {
                 border: 2px dashed #d1d5db;
                 border-radius: 0.5rem;
@@ -83,17 +59,9 @@
                 cursor: pointer;
                 transition: border-color 0.2s;
             }
-            .file-upload:hover {
-                border-color: #8b5cf6;
-            }
-            .file-upload.has-file {
-                border-color: #8b5cf6;
-                background: #f3e7ff;
-            }
-            .file-name {
-                color: #8b5cf6;
-                font-weight: 500;
-            }
+            .file-upload:hover { border-color: #8b5cf6; }
+            .file-upload.has-file { border-color: #8b5cf6; background: #f3e7ff; }
+            .file-name { color: #8b5cf6; font-weight: 500; }
             button {
                 width: 100%;
                 padding: 1rem;
@@ -106,37 +74,53 @@
                 cursor: pointer;
                 transition: opacity 0.2s;
             }
-            button:hover:not(:disabled) {
-                opacity: 0.9;
+            button:hover:not(:disabled) { opacity: 0.9; }
+            button:disabled { opacity: 0.5; cursor: not-allowed; }
+            .progress-container {
+                background: white;
+                border-radius: 0.5rem;
+                padding: 1.5rem;
+                margin: 1rem 0;
+                border: 2px solid #e0d5f7;
             }
-            button:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
+            .progress-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
             }
-            .console-log {
-                background: #1f2937;
-                color: #9ca3af;
-                border: 2px solid #374151;
+            .progress-text { font-weight: 600; color: #7c3aed; font-size: 1rem; }
+            .progress-percentage { font-weight: 700; color: #7c3aed; font-size: 1.5rem; }
+            .progress-bar-container {
+                width: 100%;
+                height: 8px;
+                background: #e0d5f7;
+                border-radius: 999px;
+                overflow: hidden;
+                margin-bottom: 0.75rem;
+            }
+            .progress-bar {
+                height: 100%;
+                background: linear-gradient(90deg, #8b5cf6 0%, #3b82f6 100%);
+                border-radius: 999px;
+                transition: width 0.3s ease;
+                width: 0%;
+            }
+            .progress-status { color: #6b7280; font-size: 0.875rem; }
+            .status-log {
+                background: #f9fafb;
+                border: 1px solid #e5e7eb;
                 border-radius: 0.5rem;
                 padding: 1rem;
-                max-height: 300px;
+                max-height: 150px;
                 overflow-y: auto;
-                font-family: "Courier New", monospace;
-                font-size: 0.75rem;
-                margin: 1rem 0;
+                font-size: 0.813rem;
+                font-family: monospace;
+                margin-top: 1rem;
             }
-            .console-line {
-                margin-bottom: 0.25rem;
-            }
-            .console-time {
-                color: #6b7280;
-            }
-            .console-success {
-                color: #10b981;
-            }
-            .console-error {
-                color: #ef4444;
-            }
+            .status-line { margin-bottom: 0.25rem; color: #6b7280; }
+            .status-line.success { color: #10b981; }
+            .status-line.error { color: #ef4444; }
             .results-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -164,11 +148,7 @@
                 justify-content: center;
                 font-size: 1.25rem;
             }
-            .result-amount {
-                font-size: 1.75rem;
-                font-weight: bold;
-                margin: 0.5rem 0;
-            }
+            .result-amount { font-size: 1.75rem; font-weight: bold; margin: 0.5rem 0; }
             .download-btn {
                 padding: 0.5rem;
                 border-radius: 0.5rem;
@@ -184,33 +164,17 @@
                 border-radius: 0.5rem;
                 margin: 1rem 0;
             }
-            .hidden {
-                display: none;
-            }
-            .progress-box {
-                background: #f3e7ff;
-                border: 2px solid #e0d5f7;
-                padding: 1.5rem;
-                border-radius: 0.5rem;
-                margin: 1rem 0;
-            }
-            .progress-text {
-                font-weight: 600;
-                color: #7c3aed;
-                margin-bottom: 0.5rem;
-            }
+            .hidden { display: none; }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="card">
                 <div class="header">
-                    <div class="icon">🤖</div>
+                    <div class="icon">⚡</div>
                     <div>
                         <h1>PuppyPad Shipping Auditor</h1>
-                        <div class="subtitle">
-                            🤖 AI-Powered - Let GPT-4o-mini Do All The Work
-                        </div>
+                        <div class="subtitle">⚡ Lightning Fast - 2 AI Calls + JavaScript</div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -232,24 +196,23 @@
                     <input type="file" id="ordersFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('orders')" />
                 </div>
                 <div id="errorBox" class="error-box hidden"></div>
-                <div id="consoleBox" class="console-log hidden">
-                    <div style="border-bottom: 1px solid #374151; padding-bottom: 0.5rem; margin-bottom: 0.5rem; color: #d1d5db;">
-                        AI Progress
+                <div id="progressContainer" class="progress-container hidden">
+                    <div class="progress-header">
+                        <div class="progress-text" id="progressText">Initializing...</div>
+                        <div class="progress-percentage" id="progressPercent">0%</div>
                     </div>
-                    <div id="consoleContent"></div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <div class="progress-status" id="progressStatus">Preparing...</div>
+                    <div class="status-log" id="statusLog"></div>
                 </div>
-                <div id="progressBox" class="progress-box hidden">
-                    <div class="progress-text" id="progressText">Initializing...</div>
-                </div>
-                <button id="analyzeBtn" onclick="analyzeOrders()">
-                    🤖 Let AI Analyze Everything
-                </button>
+                <button id="analyzeBtn" onclick="analyzeOrders()">⚡ Analyze All Orders (Ultra Fast!)</button>
             </div>
             <div id="resultsContainer" class="hidden"></div>
         </div>
         <script>
-            let ratesData = null;
-            let ordersData = null;
+            let ratesData = null, ordersData = null;
             
             function handleFileSelect(type) {
                 const input = document.getElementById(type + "File");
@@ -260,42 +223,40 @@
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: "array" });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
-                        header: 1,
-                        defval: "",
-                    });
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
                     if (type === "rates") {
                         ratesData = jsonData;
                         document.getElementById("ratesUpload").classList.add("has-file");
-                        document.getElementById("ratesLabel").innerHTML = `<span class="file-name">${file.name}</span>`;
+                        document.getElementById("ratesLabel").innerHTML = `<span class="file-name">${file.name} (${jsonData.length} rows)</span>`;
                     } else {
                         ordersData = jsonData;
                         document.getElementById("ordersUpload").classList.add("has-file");
-                        document.getElementById("ordersLabel").innerHTML = `<span class="file-name">${file.name}</span>`;
+                        document.getElementById("ordersLabel").innerHTML = `<span class="file-name">${file.name} (${jsonData.length} rows)</span>`;
                     }
-                    addConsoleLog(`✅ Loaded ${jsonData.length} rows from ${file.name}`, "success");
                 };
                 reader.readAsArrayBuffer(file);
             }
             
-            function addConsoleLog(message, type = "info") {
-                const consoleBox = document.getElementById("consoleBox");
-                const consoleContent = document.getElementById("consoleContent");
-                consoleBox.classList.remove("hidden");
-                const time = new Date().toLocaleTimeString();
-                const colorClass = type === "error" ? "console-error" : type === "success" ? "console-success" : "";
-                consoleContent.innerHTML += `<div class="console-line"><span class="console-time">${time}</span> <span class="${colorClass}">${message}</span></div>`;
-                consoleBox.scrollTop = consoleBox.scrollHeight;
+            function updateProgress(percent, text, status) {
+                document.getElementById("progressContainer").classList.remove("hidden");
+                document.getElementById("progressBar").style.width = percent + "%";
+                document.getElementById("progressPercent").textContent = Math.round(percent) + "%";
+                document.getElementById("progressText").textContent = text;
+                if (status) document.getElementById("progressStatus").textContent = status;
+            }
+            
+            function addStatusLog(message, type = "info") {
+                const log = document.getElementById("statusLog");
+                const line = document.createElement("div");
+                line.className = `status-line ${type}`;
+                line.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+                log.appendChild(line);
+                log.scrollTop = log.scrollHeight;
             }
             
             function showError(message) {
                 document.getElementById("errorBox").textContent = message;
                 document.getElementById("errorBox").classList.remove("hidden");
-            }
-            
-            function setProgress(message) {
-                document.getElementById("progressBox").classList.remove("hidden");
-                document.getElementById("progressText").textContent = message;
             }
             
             async function callOpenAI(prompt) {
@@ -305,125 +266,193 @@
                     body: JSON.stringify({
                         model: "gpt-4o-mini",
                         messages: [
-                            {
-                                role: "system",
-                                content: "You are a shipping cost auditor. Analyze data and return ONLY valid JSON with no markdown formatting."
-                            },
+                            { role: "system", content: "Return ONLY valid JSON. No markdown, no explanation." },
                             { role: "user", content: prompt }
                         ],
                         temperature: 0,
-                        max_tokens: 16000,
+                        max_tokens: 8000,
                     }),
                 });
-                
-                if (!response.ok) {
-                    throw new Error(`OpenAI API failed: ${response.status}`);
-                }
-                
+                if (!response.ok) throw new Error(`API failed: ${response.status}`);
                 const data = await response.json();
-                
-                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                    throw new Error("Invalid response from OpenAI");
-                }
-                
+                if (!data.choices?.[0]?.message?.content) throw new Error("Invalid API response");
                 return data.choices[0].message.content;
             }
             
             function extractJSON(text) {
                 let cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-                const match = cleaned.match(/\{[\s\S]*\}/);
+                const match = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
                 if (match) cleaned = match[0];
-                return JSON.parse(cleaned.replace(/[""]/g, '"').replace(/['']/g, "'"));
+                return JSON.parse(cleaned);
+            }
+            
+            function normalizeShippingLine(text) {
+                return text ? text.toLowerCase().replace(/^[^-]+-/, '').replace(/\s+/g, '').replace(/[()（）]/g, '') : "";
+            }
+            
+            function matchShippingLine(orderLine, rateLine) {
+                const o = normalizeShippingLine(orderLine);
+                const r = normalizeShippingLine(rateLine);
+                return o.includes(r) || r.includes(o);
             }
             
             async function analyzeOrders() {
                 document.getElementById("analyzeBtn").disabled = true;
                 document.getElementById("errorBox").classList.add("hidden");
-                document.getElementById("consoleContent").innerHTML = "";
+                document.getElementById("statusLog").innerHTML = "";
                 document.getElementById("resultsContainer").innerHTML = "";
                 document.getElementById("resultsContainer").classList.add("hidden");
                 
                 try {
-                    if (!ratesData || !ordersData) {
-                        throw new Error("Please upload both Excel files");
-                    }
+                    if (!ratesData || !ordersData) throw new Error("Upload both files");
+                    const exchangeRate = parseFloat(document.getElementById("exchangeRate").value);
+                    if (isNaN(exchangeRate) || exchangeRate <= 0) throw new Error("Invalid exchange rate");
                     
-                    const rate = parseFloat(document.getElementById("exchangeRate").value);
-                    if (isNaN(rate) || rate <= 0) {
-                        throw new Error("Invalid exchange rate");
-                    }
+                    updateProgress(5, "🤖 AI Parsing Rate Sheet", "Sending to AI...");
+                    addStatusLog(`Rate sheet: ${ratesData.length} rows, Orders: ${ordersData.length} rows`);
                     
-                    setProgress("🤖 AI is analyzing both files...");
-                    addConsoleLog("🤖 Sending data to GPT-4o-mini for complete analysis...");
-                    
-                    // Convert data to text for AI
-                    const ratesText = ratesData.slice(0, 150).map(row => row.join("|")).join("\n");
-                    const ordersText = ordersData.slice(0, 100).map(row => row.join("|")).join("\n");
-                    
-                    const prompt = `You are analyzing shipping costs. I have two files:
+                    const ratesText = ratesData.map(row => row.join("|")).join("\n");
+                    const ratePrompt = `Parse shipping rates. Extract:
+1. Shipping line name (row 2)
+2. ALL countries with ALL weight brackets
 
-RATE SHEET (first 150 rows):
+Data:
 ${ratesText}
 
-ORDERS (first 100 rows):
-${ordersText}
+Return JSON:
+{"lineName":"...","countries":{"United States":[{"minWeight":0,"maxWeight":0.1,"costPerKg":100,"regFee":24,"details":"..."}]}}`;
 
-TASK:
-1. Understand the rate sheet structure (it has shipping line name, countries, weight brackets, costs per kg, registration fees)
-2. Understand the orders structure (order ID, country, weight, shipping line, charged CNY, charged USD)
-3. For each order:
-   - Match it to the correct shipping line (ignore prefixes like "云途-", use fuzzy matching on Chinese/English names)
-   - Match it to the correct country's rates
-   - Find the weight bracket
-   - Calculate expected cost: (weight × cost_per_kg) + registration_fee
-   - Convert CNY to USD using exchange rate: ${rate}
-   - Compare charged USD vs expected USD
-   - Categorize as: overcharge (charged > expected), undercharge (charged < expected), accurate (same), or invalid (can't match)
-
-Return ONLY this JSON (no markdown, no explanation):
-{
-  "overcharge": [{"orderId":"123","country":"US","totalWeight":0.5,"chargedCNY":100,"chargedUSD":14.49,"expectedCNY":95,"expectedUSD":13.77,"difference":0.72,"exchangeRate":${rate},"bracket":"0.45-0.7kg @ ¥90/kg + ¥20 reg","shippingLine":"云途..."}],
-  "undercharge": [...],
-  "accurate": [...],
-  "invalid": [{"orderId":"456","country":"UK","totalWeight":0.5,"chargedCNY":100,"chargedUSD":14.49,"reason":"No rate bracket found","expectedCNY":"N/A","expectedUSD":"N/A","difference":"N/A","bracket":"N/A","shippingLine":"..."}]
-}
-
-IMPORTANT:
-- Include ALL orders from the orders file (parse the entire file, not just sample)
-- Use fuzzy matching for shipping line names
-- Match by destination country
-- Calculate: total_cny = (weight × rate_per_kg) + registration_fee
-- Be precise with calculations
-- Return ONLY the JSON object, no other text`;
-
-                    addConsoleLog("⏳ Waiting for AI response (this may take 30-60 seconds)...");
-                    const aiResponse = await callOpenAI(prompt);
+                    addStatusLog("🤖 Calling OpenAI...");
+                    const rateResponse = await callOpenAI(ratePrompt);
+                    updateProgress(20, "✅ Rates Parsed", "AI done");
+                    const rateData = extractJSON(rateResponse);
                     
-                    addConsoleLog("✅ AI analysis complete! Parsing results...");
-                    const results = extractJSON(aiResponse);
+                    const totalCountries = Object.keys(rateData.countries).length;
+                    const totalBrackets = Object.values(rateData.countries).reduce((s, b) => s + b.length, 0);
+                    addStatusLog(`✅ ${totalCountries} countries, ${totalBrackets} brackets`, "success");
                     
-                    addConsoleLog(`✅ Found: ${results.overcharge.length} overcharged, ${results.undercharge.length} undercharged, ${results.accurate.length} accurate, ${results.invalid.length} invalid`, "success");
+                    updateProgress(25, "🤖 Detecting Order Columns", "Quick AI call...");
+                    const orderSample = ordersData.slice(0, 3).map(r => r.join("|")).join("\n");
+                    const colPrompt = `Column indices (0-based):
+${orderSample}
+
+Return JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"usdCostCol":4,"shippingLineCol":5}`;
                     
-                    displayResults(results);
+                    const colResponse = await callOpenAI(colPrompt);
+                    const colMap = extractJSON(colResponse);
+                    updateProgress(30, "📊 Parsing Orders", "Extracting...");
+                    addStatusLog(`Columns detected`, "success");
+                    
+                    const allOrders = [];
+                    for (let i = 1; i < ordersData.length; i++) {
+                        const row = ordersData[i];
+                        if (!row || !row[colMap.orderIdCol]) continue;
+                        allOrders.push({
+                            orderId: String(row[colMap.orderIdCol] || "").trim(),
+                            country: String(row[colMap.countryCol] || "").trim(),
+                            totalWeight: parseFloat(row[colMap.weightCol]) || 0,
+                            chargedCNY: parseFloat(row[colMap.cnyCostCol]) || 0,
+                            chargedUSD: parseFloat(row[colMap.usdCostCol]) || 0,
+                            shippingLine: String(row[colMap.shippingLineCol] || "").trim(),
+                        });
+                    }
+                    
+                    updateProgress(40, "✅ Orders Parsed", `${allOrders.length} orders`);
+                    addStatusLog(`✅ ${allOrders.length} orders ready`, "success");
+                    updateProgress(45, "⚡ Matching Orders", "Processing...");
+                    addStatusLog("⚡ JavaScript matching (ultra fast)...");
+                    
+                    const results = { overcharge: [], undercharge: [], accurate: [], invalid: [] };
+                    const total = allOrders.length;
+                    
+                    for (let i = 0; i < total; i++) {
+                        const order = allOrders[i];
+                        if (i % 100 === 0) {
+                            const percent = 45 + (i / total) * 50;
+                            updateProgress(percent, "⚡ Processing", `${i}/${total} (${Math.round(i/total*100)}%)`);
+                        }
+                        
+                        if (!matchShippingLine(order.shippingLine, rateData.lineName)) {
+                            results.invalid.push({
+                                ...order,
+                                reason: `Line mismatch: ${order.shippingLine}`,
+                                expectedCNY: "N/A",
+                                expectedUSD: "N/A",
+                                difference: "N/A",
+                                bracket: "N/A",
+                            });
+                            continue;
+                        }
+                        
+                        const countryRates = rateData.countries[order.country];
+                        if (!countryRates) {
+                            results.invalid.push({
+                                ...order,
+                                reason: `No rates for ${order.country}`,
+                                expectedCNY: "N/A",
+                                expectedUSD: "N/A",
+                                difference: "N/A",
+                                bracket: "N/A",
+                            });
+                            continue;
+                        }
+                        
+                        const bracket = countryRates.find(b => order.totalWeight > b.minWeight && order.totalWeight <= b.maxWeight);
+                        if (!bracket) {
+                            results.invalid.push({
+                                ...order,
+                                reason: `No bracket for ${order.totalWeight}kg`,
+                                expectedCNY: "N/A",
+                                expectedUSD: "N/A",
+                                difference: "N/A",
+                                bracket: "N/A",
+                            });
+                            continue;
+                        }
+                        
+                        const expectedCNY = (order.totalWeight * bracket.costPerKg) + bracket.regFee;
+                        const expectedUSD = expectedCNY / exchangeRate;
+                        const difference = order.chargedUSD - expectedUSD;
+                        
+                        const processed = {
+                            ...order,
+                            expectedCNY: expectedCNY.toFixed(2),
+                            expectedUSD: expectedUSD.toFixed(2),
+                            difference: difference.toFixed(2),
+                            exchangeRate: exchangeRate,
+                            bracket: bracket.details,
+                        };
+                        
+                        if (Math.abs(difference) < 0.01) results.accurate.push(processed);
+                        else if (difference > 0) results.overcharge.push(processed);
+                        else results.undercharge.push(processed);
+                    }
+                    
+                    updateProgress(100, "✅ Complete!", "Done");
+                    addStatusLog(`✅ Overcharged: ${results.overcharge.length}`, "success");
+                    addStatusLog(`✅ Undercharged: ${results.undercharge.length}`, "success");
+                    addStatusLog(`✅ Accurate: ${results.accurate.length}`, "success");
+                    addStatusLog(`❌ Invalid: ${results.invalid.length}`, results.invalid.length > 0 ? "error" : "success");
+                    
+                    setTimeout(() => {
+                        document.getElementById("progressContainer").classList.add("hidden");
+                        displayResults(results);
+                    }, 1000);
                     
                 } catch (error) {
                     showError(error.message);
-                    addConsoleLog(`❌ Error: ${error.message}`, "error");
+                    addStatusLog(`❌ ${error.message}`, "error");
                 } finally {
                     document.getElementById("analyzeBtn").disabled = false;
-                    document.getElementById("progressBox").classList.add("hidden");
                 }
             }
             
             function displayResults(results) {
                 const container = document.getElementById("resultsContainer");
                 container.classList.remove("hidden");
-                
-                const overchargeTotal = results.overcharge.reduce((sum, o) => sum + parseFloat(o.difference || 0), 0);
-                const underchargeTotal = Math.abs(results.undercharge.reduce((sum, o) => sum + parseFloat(o.difference || 0), 0));
-                
+                const overchargeTotal = results.overcharge.reduce((s, o) => s + parseFloat(o.difference), 0);
+                const underchargeTotal = Math.abs(results.undercharge.reduce((s, o) => s + parseFloat(o.difference), 0));
                 window.resultsData = results;
-                
                 container.innerHTML = `
                 <div class="results-grid">
                     <div class="result-card">
@@ -461,83 +490,24 @@ IMPORTANT:
                         <h3>Invalid</h3>
                         <div style="color: #6b7280; font-size: 0.875rem; margin-top: 1rem;">${results.invalid.length} orders</div>
                     </div>
-                </div>
-            `;
+                </div>`;
             }
             
             function downloadCSV(type) {
                 const data = window.resultsData[type];
-                if (!data || data.length === 0) {
-                    alert("No data to download");
-                    return;
-                }
-                
-                const headers = [
-                    "Order ID",
-                    "Country",
-                    "Total Weight (kg)",
-                    "Charged CNY",
-                    "Charged USD",
-                    "Expected CNY",
-                    "Expected USD",
-                    "Exchange Rate",
-                    "Difference USD",
-                    "Weight Bracket",
-                    "Shipping Line",
-                    data[0].reason ? "Reason" : "",
-                ].filter(Boolean);
-                
+                if (!data || !data.length) { alert("No data"); return; }
+                const headers = ["Order ID","Country","Weight (kg)","Charged CNY","Charged USD","Expected CNY","Expected USD","Exchange Rate","Difference USD","Bracket","Shipping Line",data[0].reason?"Reason":""].filter(Boolean);
                 let csv = headers.join(",") + "\n";
-                let totalChargedCNY = 0, totalChargedUSD = 0, totalExpectedCNY = 0, totalExpectedUSD = 0, totalDifference = 0;
-                
-                data.forEach((order) => {
-                    const row = [
-                        order.orderId,
-                        order.country || "",
-                        order.totalWeight,
-                        order.chargedCNY,
-                        order.chargedUSD,
-                        order.expectedCNY,
-                        order.expectedUSD,
-                        order.exchangeRate || "",
-                        order.difference,
-                        `"${order.bracket}"`,
-                        order.shippingLine,
-                        order.reason || "",
-                    ].filter((_, i) => i < headers.length);
-                    csv += row.join(",") + "\n";
-                    
-                    if (order.expectedCNY !== "N/A") {
-                        totalChargedCNY += parseFloat(order.chargedCNY) || 0;
-                        totalChargedUSD += parseFloat(order.chargedUSD) || 0;
-                        totalExpectedCNY += parseFloat(order.expectedCNY) || 0;
-                        totalExpectedUSD += parseFloat(order.expectedUSD) || 0;
-                        totalDifference += parseFloat(order.difference) || 0;
-                    }
+                let totalCNY = 0, totalUSD = 0, totalExpCNY = 0, totalExpUSD = 0, totalDiff = 0;
+                data.forEach(o => {
+                    csv += [o.orderId,o.country||"",o.totalWeight,o.chargedCNY,o.chargedUSD,o.expectedCNY,o.expectedUSD,o.exchangeRate||"",o.difference,`"${o.bracket}"`,o.shippingLine,o.reason||""].filter((_,i)=>i<headers.length).join(",")+"\n";
+                    if(o.expectedCNY!=="N/A"){totalCNY+=parseFloat(o.chargedCNY);totalUSD+=parseFloat(o.chargedUSD);totalExpCNY+=parseFloat(o.expectedCNY);totalExpUSD+=parseFloat(o.expectedUSD);totalDiff+=parseFloat(o.difference);}
                 });
-                
-                csv += "\n" + [
-                    "TOTAL",
-                    "",
-                    "",
-                    totalChargedCNY.toFixed(2),
-                    totalChargedUSD.toFixed(2),
-                    totalExpectedCNY.toFixed(2),
-                    totalExpectedUSD.toFixed(2),
-                    "",
-                    totalDifference.toFixed(2),
-                    "",
-                    "",
-                    "",
-                ].slice(0, headers.length).join(",");
-                
-                const blob = new Blob([csv], { type: "text/csv" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `${type}_orders.csv`;
+                csv+="\n"+["TOTAL","","",totalCNY.toFixed(2),totalUSD.toFixed(2),totalExpCNY.toFixed(2),totalExpUSD.toFixed(2),"",totalDiff.toFixed(2),"","",""].slice(0,headers.length).join(",");
+                const a=document.createElement("a");
+                a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+                a.download=`${type}_orders.csv`;
                 a.click();
-                URL.revokeObjectURL(url);
             }
         </script>
     </body>
