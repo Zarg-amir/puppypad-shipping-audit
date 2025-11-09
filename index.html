@@ -965,47 +965,6 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                 window.resultsData = results;
                 
                 container.innerHTML = `
-                    <!-- All Orders Detailed View - MOVED TO TOP -->
-                    <div class="card" style="margin-bottom: 2rem;">
-                        <h2 style="color: #1e293b; margin-bottom: 1rem;">📊 All Orders - Detailed View</h2>
-
-                        <!-- Tab Navigation -->
-                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0;">
-                            <button onclick="switchTab('overcharge')" id="tab-overcharge" class="tab-btn active-tab" style="padding: 0.75rem 1.5rem; background: none; border: none; border-bottom: 3px solid #dc2626; color: #dc2626; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                                Overcharged (${results.overcharge.length})
-                            </button>
-                            <button onclick="switchTab('undercharge')" id="tab-undercharge" class="tab-btn" style="padding: 0.75rem 1.5rem; background: none; border: none; border-bottom: 3px solid transparent; color: #64748b; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                                Undercharged (${results.undercharge.length})
-                            </button>
-                            <button onclick="switchTab('accurate')" id="tab-accurate" class="tab-btn" style="padding: 0.75rem 1.5rem; background: none; border: none; border-bottom: 3px solid transparent; color: #64748b; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                                Accurate (${results.accurate.length})
-                            </button>
-                            <button onclick="switchTab('invalid')" id="tab-invalid" class="tab-btn" style="padding: 0.75rem 1.5rem; background: none; border: none; border-bottom: 3px solid transparent; color: #64748b; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-                                Invalid (${results.invalid.length})
-                            </button>
-                        </div>
-
-                        <!-- Tab Content: Overcharge -->
-                        <div id="content-overcharge" class="tab-content" style="overflow-x: auto;">
-                            ${generateOrderTable(results.overcharge, 'overcharge')}
-                        </div>
-
-                        <!-- Tab Content: Undercharge -->
-                        <div id="content-undercharge" class="tab-content" style="display: none; overflow-x: auto;">
-                            ${generateOrderTable(results.undercharge, 'undercharge')}
-                        </div>
-
-                        <!-- Tab Content: Accurate -->
-                        <div id="content-accurate" class="tab-content" style="display: none; overflow-x: auto;">
-                            ${generateOrderTable(results.accurate, 'accurate')}
-                        </div>
-
-                        <!-- Tab Content: Invalid -->
-                        <div id="content-invalid" class="tab-content" style="display: none; overflow-x: auto;">
-                            ${generateOrderTable(results.invalid, 'invalid')}
-                        </div>
-                    </div>
-
                     <!-- Summary Cards -->
                     <div class="results-grid" style="margin-bottom: 2rem;">
                         <div class="result-card">
@@ -1015,8 +974,8 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Overcharged</h3>
                             <div class="result-amount" style="color: #dc2626;">$${overchargeTotal.toFixed(2)}</div>
                             <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">${results.overcharge.length} orders</div>
-                            <button class="download-btn" onclick="downloadCSV('overcharge')" style="background: #fee2e2; color: #dc2626; width: 100%; padding: 0.75rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">
-                                💾 Download CSV
+                            <button class="download-btn" onclick="downloadExcel('overcharge')">
+                                📥 Download Excel
                             </button>
                         </div>
                         <div class="result-card">
@@ -1026,8 +985,8 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Undercharged</h3>
                             <div class="result-amount" style="color: #059669;">$${underchargeTotal.toFixed(2)}</div>
                             <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">${results.undercharge.length} orders</div>
-                            <button class="download-btn" onclick="downloadCSV('undercharge')" style="background: #d1fae5; color: #059669; width: 100%; padding: 0.75rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">
-                                💾 Download CSV
+                            <button class="download-btn" onclick="downloadExcel('undercharge')">
+                                📥 Download Excel
                             </button>
                         </div>
                         <div class="result-card">
@@ -1037,8 +996,8 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Accurate</h3>
                             <div class="result-amount" style="color: #d97706;">${results.accurate.length}</div>
                             <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">orders correctly charged</div>
-                            <button class="download-btn" onclick="downloadCSV('accurate')" style="background: #fef3c7; color: #d97706; width: 100%; padding: 0.75rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">
-                                💾 Download CSV
+                            <button class="download-btn" onclick="downloadExcel('accurate')">
+                                📥 Download Excel
                             </button>
                         </div>
                         <div class="result-card">
@@ -1048,9 +1007,44 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Invalid</h3>
                             <div class="result-amount" style="color: #6b7280;">${results.invalid.length}</div>
                             <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">orders with issues</div>
-                            <button class="download-btn" onclick="downloadCSV('invalid')" style="background: #f3f4f6; color: #6b7280; width: 100%; padding: 0.75rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;">
-                                💾 Download CSV
+                            <button class="download-btn" onclick="downloadExcel('invalid')">
+                                📥 Download Excel
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- All Orders Detailed View - AFTER RESULT-GRID -->
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <h2 style="color: #1e293b; margin-bottom: 1.5rem;">📊 All Orders - Detailed View</h2>
+
+                        <!-- Tab Navigation with new button styles -->
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+                            <button onclick="switchTab('overcharge')" id="tab-overcharge" class="tab-btn active">
+                                Overcharged (${results.overcharge.length})
+                            </button>
+                            <button onclick="switchTab('undercharge')" id="tab-undercharge" class="tab-btn">
+                                Undercharged (${results.undercharge.length})
+                            </button>
+                            <button onclick="switchTab('accurate')" id="tab-accurate" class="tab-btn">
+                                Accurate (${results.accurate.length})
+                            </button>
+                            <button onclick="switchTab('invalid')" id="tab-invalid" class="tab-btn">
+                                Invalid (${results.invalid.length})
+                            </button>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="content-overcharge" style="display: block;">
+                            ${generateOrderTable(results.overcharge, 'overcharge')}
+                        </div>
+                        <div class="tab-content" id="content-undercharge" style="display: none;">
+                            ${generateOrderTable(results.undercharge, 'undercharge')}
+                        </div>
+                        <div class="tab-content" id="content-accurate" style="display: none;">
+                            ${generateOrderTable(results.accurate, 'accurate')}
+                        </div>
+                        <div class="tab-content" id="content-invalid" style="display: none;">
+                            ${generateOrderTable(results.invalid, 'invalid')}
                         </div>
                     </div>
 
@@ -1298,42 +1292,152 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                     content.style.display = 'none';
                 });
 
-                // Remove active styling from all tabs
+                // Remove active class from all tabs
                 document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.style.borderBottom = '3px solid transparent';
-                    btn.style.color = '#6b7280';
+                    btn.classList.remove('active');
                 });
 
                 // Show selected tab content
                 document.getElementById(`content-${tabName}`).style.display = 'block';
 
-                // Add active styling to selected tab
-                const activeTab = document.getElementById(`tab-${tabName}`);
-                const colors = {
-                    overcharge: '#dc2626',
-                    undercharge: '#059669',
-                    accurate: '#2563eb',
-                    invalid: '#6b7280'
-                };
-                activeTab.style.borderBottom = `3px solid ${colors[tabName]}`;
-                activeTab.style.color = colors[tabName];
+                // Add active class to selected tab
+                document.getElementById(`tab-${tabName}`).classList.add('active');
             }
             
-            function downloadCSV(type) {
+            async function downloadExcel(type) {
                 const data = window.resultsData[type];
-                if (!data || !data.length) { alert("No data"); return; }
-                const headers = ["Order ID","Country","Weight (kg)","Charged CNY","Charged USD","Expected CNY","Expected USD","Exchange Rate","Difference USD","Bracket","Shipping Line",data[0].reason?"Reason":""].filter(Boolean);
-                let csv = headers.join(",") + "\n";
+                if (!data || !data.length) {
+                    alert("No data available for download");
+                    return;
+                }
+
+                // Create a new workbook and worksheet
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet(type.charAt(0).toUpperCase() + type.slice(1) + ' Orders');
+
+                // Define colors for each type
+                const colors = {
+                    overcharge: { header: 'FFDC2626', row: 'FFFEE2E2' },
+                    undercharge: { header: 'FF059669', row: 'FFD1FAE5' },
+                    accurate: { header: 'FFD97706', row: 'FFFEF3C7' },
+                    invalid: { header: 'FF6B7280', row: 'FFF3F4F6' }
+                };
+
+                const isInvalid = type === 'invalid';
+
+                // Define headers based on type
+                const headers = isInvalid
+                    ? ['Order ID', 'Country', 'Weight (kg)', 'Charged CNY', 'Charged USD', 'Shipping Carrier', 'Issue', 'Details']
+                    : ['Order ID', 'Country', 'Weight (kg)', 'Charged CNY', 'Charged USD', 'Expected CNY', 'Expected USD', 'Exchange Rate', 'Difference USD', 'Bracket', 'Shipping Line'];
+
+                // Add header row with styling
+                const headerRow = worksheet.addRow(headers);
+                headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                headerRow.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: colors[type].header }
+                };
+                headerRow.height = 25;
+                headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+                // Initialize totals
                 let totalCNY = 0, totalUSD = 0, totalExpCNY = 0, totalExpUSD = 0, totalDiff = 0;
-                data.forEach(o => {
-                    csv += [o.orderId,o.country||"",o.totalWeight,o.chargedCNY,o.chargedUSD,o.expectedCNY,o.expectedUSD,o.exchangeRate||"",o.difference,`"${o.bracket}"`,o.shippingLine,o.reason||""].filter((_,i)=>i<headers.length).join(",")+"\n";
-                    if(o.expectedCNY!=="N/A"){totalCNY+=parseFloat(o.chargedCNY);totalUSD+=parseFloat(o.chargedUSD);totalExpCNY+=parseFloat(o.expectedCNY);totalExpUSD+=parseFloat(o.expectedUSD);totalDiff+=parseFloat(o.difference);}
+
+                // Add data rows
+                data.forEach((order, idx) => {
+                    const rowData = isInvalid
+                        ? [
+                            order.orderId,
+                            order.country || '',
+                            order.totalWeight,
+                            order.chargedCNY,
+                            order.chargedUSD,
+                            order.shippingLine,
+                            order.reason || '',
+                            order.details || ''
+                        ]
+                        : [
+                            order.orderId,
+                            order.country || '',
+                            order.totalWeight,
+                            order.chargedCNY,
+                            order.chargedUSD,
+                            order.expectedCNY,
+                            order.expectedUSD,
+                            order.exchangeRate || '',
+                            order.difference,
+                            order.bracket,
+                            order.shippingLine
+                        ];
+
+                    const row = worksheet.addRow(rowData);
+
+                    // Alternate row colors
+                    if (idx % 2 === 0) {
+                        row.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: colors[type].row }
+                        };
+                    }
+
+                    // Calculate totals (only for non-invalid orders)
+                    if (!isInvalid && order.expectedCNY !== "N/A") {
+                        totalCNY += parseFloat(order.chargedCNY);
+                        totalUSD += parseFloat(order.chargedUSD);
+                        totalExpCNY += parseFloat(order.expectedCNY);
+                        totalExpUSD += parseFloat(order.expectedUSD);
+                        totalDiff += parseFloat(order.difference);
+                    }
                 });
-                csv+="\n"+["TOTAL","","",totalCNY.toFixed(2),totalUSD.toFixed(2),totalExpCNY.toFixed(2),totalExpUSD.toFixed(2),"",totalDiff.toFixed(2),"","",""].slice(0,headers.length).join(",");
-                const a=document.createElement("a");
-                a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-                a.download=`${type}_orders.csv`;
+
+                // Add total row for non-invalid types
+                if (!isInvalid && data.length > 0 && data[0].expectedCNY !== "N/A") {
+                    worksheet.addRow([]);
+                    const totalRow = worksheet.addRow([
+                        'TOTAL', '', '',
+                        totalCNY.toFixed(2),
+                        totalUSD.toFixed(2),
+                        totalExpCNY.toFixed(2),
+                        totalExpUSD.toFixed(2),
+                        '',
+                        totalDiff.toFixed(2),
+                        '', ''
+                    ]);
+                    totalRow.font = { bold: true };
+                    totalRow.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFE2E8F0' }
+                    };
+                }
+
+                // Set column widths
+                worksheet.columns = headers.map((header, idx) => {
+                    if (header === 'Order ID') return { width: 15 };
+                    if (header === 'Country') return { width: 12 };
+                    if (header === 'Weight (kg)') return { width: 12 };
+                    if (header === 'Charged CNY' || header === 'Expected CNY') return { width: 14 };
+                    if (header === 'Charged USD' || header === 'Expected USD') return { width: 14 };
+                    if (header === 'Exchange Rate') return { width: 14 };
+                    if (header === 'Difference USD') return { width: 14 };
+                    if (header === 'Bracket') return { width: 25 };
+                    if (header === 'Shipping Carrier' || header === 'Shipping Line') return { width: 20 };
+                    if (header === 'Issue') return { width: 25 };
+                    if (header === 'Details') return { width: 50 };
+                    return { width: 15 };
+                });
+
+                // Generate and download the file
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${type}_orders.xlsx`;
                 a.click();
+                URL.revokeObjectURL(url);
             }
         </script>
     </body>
