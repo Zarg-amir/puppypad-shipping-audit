@@ -867,27 +867,27 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                     <!-- Missing Carriers Alert -->
                     ${results.missingCarriers.length > 0 ? `
                     <div class="missing-carriers-table">
-                        <h2 style="color: #92400e; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <h2 style="color: #fbbf24; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                             <span style="font-size: 1.5rem;">📦</span> Missing Shipping Carriers/Methods - Action Required
                         </h2>
-                        <p style="color: #78350f; margin-bottom: 1.5rem; font-size: 0.95rem;">
+                        <p style="color: rgba(251, 191, 36, 0.8); margin-bottom: 1.5rem; font-size: 0.95rem;">
                             The following shipping carriers/methods were found in your orders but don't have rate sheets. Please request these rate sheets from Mrek to process these ${results.missingCarriers.reduce((total, item) => total + item.orderCount, 0)} orders.
                         </p>
                         <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 0.5rem; overflow: hidden;">
+                            <table style="width: 100%; border-collapse: collapse; background: rgba(10, 14, 26, 0.3); border-radius: 0.375rem; overflow: hidden;">
                                 <thead>
-                                    <tr style="background: #fed7aa; border-bottom: 2px solid #fdba74;">
-                                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: #92400e;">Shipping Carrier/Method</th>
-                                        <th style="padding: 1rem; text-align: center; font-weight: 600; color: #92400e;">Number of Orders</th>
-                                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: #92400e;">Sample Order IDs</th>
+                                    <tr style="background: rgba(251, 191, 36, 0.1); border-bottom: 1px solid rgba(251, 191, 36, 0.2);">
+                                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: rgba(251, 191, 36, 0.9); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Shipping Carrier/Method</th>
+                                        <th style="padding: 1rem; text-align: center; font-weight: 600; color: rgba(251, 191, 36, 0.9); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Number of Orders</th>
+                                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: rgba(251, 191, 36, 0.9); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Sample Order IDs</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${results.missingCarriers.map((item, idx) => `
-                                        <tr style="border-bottom: 1px solid #fed7aa; ${idx % 2 === 0 ? 'background: #fffbeb;' : 'background: white;'}">
-                                            <td style="padding: 1rem; font-weight: 600; color: #78350f;">${item.carrier}</td>
-                                            <td style="padding: 1rem; text-align: center; color: #92400e; font-weight: 600; font-size: 1.1rem;">${item.orderCount}</td>
-                                            <td style="padding: 1rem; color: #6b7280; font-size: 0.875rem;">${item.orderIds.slice(0, 5).join(', ')}${item.orderIds.length > 5 ? '...' : ''}</td>
+                                        <tr style="border-bottom: 1px solid rgba(251, 191, 36, 0.1); ${idx % 2 === 0 ? 'background: rgba(251, 191, 36, 0.05);' : ''}">
+                                            <td style="padding: 1rem; font-weight: 600; color: #fbbf24;">${item.carrier}</td>
+                                            <td style="padding: 1rem; text-align: center; color: #fbbf24; font-weight: 700; font-size: 1.1rem;">${item.orderCount}</td>
+                                            <td style="padding: 1rem; color: rgba(255, 255, 255, 0.7); font-size: 0.875rem;">${item.orderIds.slice(0, 5).join(', ')}${item.orderIds.length > 5 ? '...' : ''}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -900,58 +900,58 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                     <div class="results-grid" style="margin-bottom: 2rem;">
                         <div class="result-card">
                             <div class="result-header">
-                                <div class="result-icon" style="background: #fee2e2; color: #dc2626;">📈</div>
+                                <div class="result-icon" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);">📈</div>
                             </div>
                             <h3>Overcharged</h3>
-                            <div class="result-amount" style="color: #dc2626;">$${overchargeTotal.toFixed(2)}</div>
-                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">${results.overcharge.length} orders</div>
-                            <button class="download-btn" onclick="downloadCSV('overcharge')" style="background: #fee2e2; color: #dc2626; width: 100%; padding: 0.5rem; font-weight: 600; border: none; border-radius: 0.5rem; cursor: pointer;">
-                                📥 Download File
+                            <div class="result-amount" style="color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);">$${overchargeTotal.toFixed(2)}</div>
+                            <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.875rem; margin-bottom: 1rem;">${results.overcharge.length} orders</div>
+                            <button class="download-btn" onclick="downloadCSV('overcharge')" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; width: 100%; padding: 0.75rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 0.375rem; cursor: pointer; transition: all 0.3s;">
+                                💾 Download CSV
                             </button>
                         </div>
                         <div class="result-card">
                             <div class="result-header">
-                                <div class="result-icon" style="background: #d1fae5; color: #059669;">📉</div>
+                                <div class="result-icon" style="background: rgba(16, 185, 129, 0.2); color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);">📉</div>
                             </div>
                             <h3>Undercharged</h3>
-                            <div class="result-amount" style="color: #059669;">$${underchargeTotal.toFixed(2)}</div>
-                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">${results.undercharge.length} orders</div>
-                            <button class="download-btn" onclick="downloadCSV('undercharge')" style="background: #d1fae5; color: #059669; width: 100%; padding: 0.5rem; font-weight: 600; border: none; border-radius: 0.5rem; cursor: pointer;">
-                                📥 Download File
+                            <div class="result-amount" style="color: #10b981; text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);">$${underchargeTotal.toFixed(2)}</div>
+                            <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.875rem; margin-bottom: 1rem;">${results.undercharge.length} orders</div>
+                            <button class="download-btn" onclick="downloadCSV('undercharge')" style="background: rgba(16, 185, 129, 0.15); color: #10b981; width: 100%; padding: 0.75rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 0.375rem; cursor: pointer; transition: all 0.3s;">
+                                💾 Download CSV
                             </button>
                         </div>
                         <div class="result-card">
                             <div class="result-header">
-                                <div class="result-icon" style="background: #dbeafe; color: #2563eb;">✓</div>
+                                <div class="result-icon" style="background: rgba(251, 191, 36, 0.2); color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);">✓</div>
                             </div>
                             <h3>Accurate</h3>
-                            <div class="result-amount" style="color: #2563eb;">${results.accurate.length}</div>
-                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">orders correctly charged</div>
-                            <button class="download-btn" onclick="downloadCSV('accurate')" style="background: #dbeafe; color: #2563eb; width: 100%; padding: 0.5rem; font-weight: 600; border: none; border-radius: 0.5rem; cursor: pointer;">
-                                📥 Download File
+                            <div class="result-amount" style="color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);">${results.accurate.length}</div>
+                            <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.875rem; margin-bottom: 1rem;">orders correctly charged</div>
+                            <button class="download-btn" onclick="downloadCSV('accurate')" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; width: 100%; padding: 0.75rem; font-weight: 700; border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 0.375rem; cursor: pointer; transition: all 0.3s;">
+                                💾 Download CSV
                             </button>
                         </div>
                         <div class="result-card">
                             <div class="result-header">
-                                <div class="result-icon" style="background: #f3f4f6; color: #6b7280;">⚠</div>
+                                <div class="result-icon" style="background: rgba(156, 163, 175, 0.2); color: #9ca3af; box-shadow: 0 0 15px rgba(156, 163, 175, 0.2);">⚠</div>
                             </div>
                             <h3>Invalid</h3>
-                            <div class="result-amount" style="color: #6b7280;">${results.invalid.length}</div>
-                            <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">orders with issues</div>
-                            <button class="download-btn" onclick="downloadCSV('invalid')" style="background: #f3f4f6; color: #6b7280; width: 100%; padding: 0.5rem; font-weight: 600; border: none; border-radius: 0.5rem; cursor: pointer;">
-                                📥 Download File
+                            <div class="result-amount" style="color: #9ca3af;">${results.invalid.length}</div>
+                            <div style="color: rgba(255, 255, 255, 0.6); font-size: 0.875rem; margin-bottom: 1rem;">orders with issues</div>
+                            <button class="download-btn" onclick="downloadCSV('invalid')" style="background: rgba(156, 163, 175, 0.15); color: #9ca3af; width: 100%; padding: 0.75rem; font-weight: 700; border: 1px solid rgba(156, 163, 175, 0.3); border-radius: 0.375rem; cursor: pointer; transition: all 0.3s;">
+                                💾 Download CSV
                             </button>
                         </div>
                     </div>
                     
                     <!-- Overall Accuracy Card -->
-                    <div class="card" style="background: linear-gradient(135deg, #f3e7ff 0%, #e0f2fe 100%); border: 2px solid #8b5cf6; margin-bottom: 2rem;">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%); border: 1px solid rgba(251, 191, 36, 0.3); margin-bottom: 2rem; box-shadow: 0 0 30px rgba(251, 191, 36, 0.15);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <h2 style="color: #7c3aed; margin-bottom: 0.5rem;">Overall Accuracy</h2>
-                                <p style="color: #6b7280; font-size: 0.875rem;">${accurateOrders} out of ${totalOrders} orders were correctly charged</p>
+                                <h2 style="color: #fbbf24; margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);">Overall Accuracy</h2>
+                                <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.875rem;">${accurateOrders} out of ${totalOrders} orders were correctly charged</p>
                             </div>
-                            <div style="font-size: 3rem; font-weight: bold; color: #7c3aed;">${accuracyPercentage}%</div>
+                            <div style="font-size: 3rem; font-weight: 800; color: #fbbf24; text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);">${accuracyPercentage}%</div>
                         </div>
                     </div>
                     
