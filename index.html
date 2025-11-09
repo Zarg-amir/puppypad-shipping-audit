@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>PuppyPad Shipping Auditor</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -13,8 +14,11 @@
                 background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
                 min-height: 100vh;
                 padding: 2rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
-            .container { max-width: 1400px; margin: 0 auto; }
+            .container { max-width: 1400px; margin: 0 auto; width: 100%; }
             .card {
                 background: #ffffff;
                 border: 1px solid #e2e8f0;
@@ -23,26 +27,30 @@
                 margin-bottom: 1.5rem;
                 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             }
-            .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+            .header {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 2rem;
+            }
             .icon {
-                width: 3.5rem; height: 3.5rem;
-                background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-                border-radius: 12px;
+                width: 5rem;
+                height: 5rem;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: #ffffff;
-                font-size: 1.75rem;
+            }
+            .icon img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
             }
             h1 {
                 font-size: 2rem;
                 color: #1e293b;
                 font-weight: 700;
-            }
-            .subtitle {
-                color: #64748b;
-                font-size: 0.875rem;
-                font-weight: 500;
+                text-align: center;
             }
             .form-row {
                 display: grid;
@@ -106,7 +114,7 @@
             }
             button {
                 padding: 0.875rem 2rem;
-                background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                background: #2d3748;
                 color: #ffffff;
                 border: none;
                 border-radius: 8px;
@@ -114,11 +122,10 @@
                 font-weight: 700;
                 cursor: pointer;
                 transition: all 0.2s;
-                box-shadow: 0 4px 6px rgba(251, 191, 36, 0.2);
             }
             button:hover:not(:disabled) {
+                background: #1a202c;
                 transform: translateY(-1px);
-                box-shadow: 0 6px 12px rgba(251, 191, 36, 0.3);
             }
             button:disabled {
                 opacity: 0.5;
@@ -226,13 +233,47 @@
                 margin: 0.5rem 0;
             }
             .download-btn {
-                padding: 0.625rem;
-                border-radius: 8px;
+                padding: 0.75rem 1rem;
+                border-radius: 6px;
                 cursor: pointer;
                 transition: all 0.2s;
-                width: auto;
+                width: 100%;
                 font-weight: 600;
                 font-size: 0.875rem;
+                background: #2d3748 !important;
+                color: #ffffff !important;
+                border: none;
+            }
+            .download-btn:hover {
+                background: #1a202c !important;
+                transform: translateY(-1px);
+            }
+            .input-toggle {
+                display: flex;
+                gap: 0.5rem;
+                margin-bottom: 0.75rem;
+            }
+            .toggle-btn {
+                padding: 0.5rem 1rem;
+                background: #e2e8f0;
+                border: none;
+                border-radius: 6px;
+                color: #475569;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-size: 0.813rem;
+                flex: 1;
+            }
+            .toggle-btn.active {
+                background: #2d3748;
+                color: #ffffff;
+            }
+            .input-option {
+                display: none;
+            }
+            .input-option.active {
+                display: block;
             }
             .error-box {
                 background: #fef2f2;
@@ -268,18 +309,22 @@
                 background: #f8fafc;
             }
             .tab-btn {
-                padding: 0.75rem 1.5rem;
-                background: none;
+                padding: 0.5rem 1rem;
+                background: #e2e8f0;
                 border: none;
-                border-bottom: 3px solid transparent;
-                color: #64748b;
+                border-radius: 6px;
+                color: #475569;
                 font-weight: 600;
                 cursor: pointer;
                 transition: all 0.2s;
+                font-size: 0.875rem;
             }
             .tab-btn:hover {
-                color: #1e293b;
-                background: #f8fafc;
+                background: #cbd5e1;
+            }
+            .tab-btn.active {
+                background: #2d3748;
+                color: #ffffff;
             }
             .accordion {
                 background: #ffffff;
@@ -369,26 +414,43 @@
         <div class="container">
             <div class="card">
                 <div class="header">
-                    <div class="icon">🚀</div>
-                    <div>
-                        <h1>PuppyPad Shipping Auditor</h1>
-                        <div class="subtitle">🚀 Super Fast - 1 AI Call + Pure JavaScript | v5.0 - Clean & Airy</div>
+                    <div class="icon">
+                        <img src="https://cdn.shopify.com/s/files/1/0433/0510/7612/files/navyblue-logo.svg?v=1754231041" alt="PuppyPad Logo">
                     </div>
+                    <h1>PuppyPad Shipping Auditor</h1>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>📊 Shipping Line Charges Excel File</label>
-                        <div class="file-upload" id="ratesUpload" onclick="document.getElementById('ratesFile').click()">
-                            <span id="ratesLabel">📄 Click to upload Excel file</span>
+                        <div class="input-toggle">
+                            <button class="toggle-btn active" onclick="toggleInputType('rates', 'upload')">Upload File</button>
+                            <button class="toggle-btn" onclick="toggleInputType('rates', 'link')">Google Sheet Link</button>
                         </div>
-                        <input type="file" id="ratesFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('rates')" />
+                        <div class="input-option active" id="rates-upload">
+                            <div class="file-upload" id="ratesUpload" onclick="document.getElementById('ratesFile').click()">
+                                <span id="ratesLabel">📄 Click to upload Excel file</span>
+                            </div>
+                            <input type="file" id="ratesFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('rates')" />
+                        </div>
+                        <div class="input-option" id="rates-link">
+                            <input type="text" id="ratesLink" placeholder="Paste Google Sheet link here" style="width: 100%; padding: 0.875rem; border: 1px solid #cbd5e1; border-radius: 8px;" onchange="handleLinkInput('rates')">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>📦 Mrek Orders Excel File</label>
-                        <div class="file-upload" id="ordersUpload" onclick="document.getElementById('ordersFile').click()">
-                            <span id="ordersLabel">📄 Click to upload Excel file</span>
+                        <div class="input-toggle">
+                            <button class="toggle-btn active" onclick="toggleInputType('orders', 'upload')">Upload File</button>
+                            <button class="toggle-btn" onclick="toggleInputType('orders', 'link')">Google Sheet Link</button>
                         </div>
-                        <input type="file" id="ordersFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('orders')" />
+                        <div class="input-option active" id="orders-upload">
+                            <div class="file-upload" id="ordersUpload" onclick="document.getElementById('ordersFile').click()">
+                                <span id="ordersLabel">📄 Click to upload Excel file</span>
+                            </div>
+                            <input type="file" id="ordersFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('orders')" />
+                        </div>
+                        <div class="input-option" id="orders-link">
+                            <input type="text" id="ordersLink" placeholder="Paste Google Sheet link here" style="width: 100%; padding: 0.875rem; border: 1px solid #cbd5e1; border-radius: 8px;" onchange="handleLinkInput('orders')">
+                        </div>
                     </div>
                 </div>
                 <div id="errorBox" class="error-box hidden"></div>
@@ -408,7 +470,7 @@
                         <label>Exchange Rate (CNY to USD)</label>
                         <input type="number" id="exchangeRate" value="6.9" step="0.01" />
                     </div>
-                    <button id="analyzeBtn" onclick="analyzeOrders()">🚀 Analyze All Orders (Super Fast!)</button>
+                    <button id="analyzeBtn" onclick="analyzeOrders()">📊 Analyze All Orders</button>
                 </div>
             </div>
             <div id="resultsContainer" class="hidden"></div>
@@ -437,8 +499,74 @@
                     }
                 };
                 reader.readAsArrayBuffer(file);
+                saveToURL();
             }
-            
+
+            function toggleInputType(type, inputType) {
+                // Toggle buttons
+                const parentEl = document.getElementById(`${type}-upload`).parentElement.previousElementSibling;
+                const buttons = parentEl.querySelectorAll('.toggle-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+
+                // Toggle input options
+                document.getElementById(`${type}-upload`).classList.remove('active');
+                document.getElementById(`${type}-link`).classList.remove('active');
+                document.getElementById(`${type}-${inputType}`).classList.add('active');
+            }
+
+            async function handleLinkInput(type) {
+                const link = document.getElementById(type + "Link").value;
+                if (!link) return;
+
+                try {
+                    // Extract sheet ID from Google Sheets URL
+                    const match = link.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+                    if (!match) {
+                        showError("Invalid Google Sheets URL");
+                        return;
+                    }
+
+                    const sheetId = match[1];
+                    const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+
+                    const response = await fetch(exportUrl);
+                    const arrayBuffer = await response.arrayBuffer();
+                    const data = new Uint8Array(arrayBuffer);
+                    const workbook = XLSX.read(data, { type: "array" });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
+
+                    if (type === "rates") {
+                        ratesData = jsonData;
+                        document.getElementById("ratesLabel").innerHTML = `<span class="file-name">✅ Loaded from Google Sheets (${jsonData.length} rows)</span>`;
+                    } else {
+                        ordersData = jsonData;
+                        document.getElementById("ordersLabel").innerHTML = `<span class="file-name">✅ Loaded from Google Sheets (${jsonData.length} rows)</span>`;
+                    }
+                    saveToURL();
+                } catch (error) {
+                    showError("Failed to load Google Sheet. Make sure it's publicly accessible.");
+                }
+            }
+
+            function saveToURL() {
+                const exchangeRate = document.getElementById('exchangeRate').value;
+                const url = new URL(window.location);
+                url.searchParams.set('exchangeRate', exchangeRate);
+                window.history.pushState({}, '', url);
+            }
+
+            function loadFromURL() {
+                const url = new URL(window.location);
+                const exchangeRate = url.searchParams.get('exchangeRate');
+                if (exchangeRate) {
+                    document.getElementById('exchangeRate').value = exchangeRate;
+                }
+            }
+
+            window.addEventListener('DOMContentLoaded', loadFromURL);
+
             function updateProgress(percent, text, status) {
                 document.getElementById("progressContainer").classList.remove("hidden");
                 document.getElementById("progressBar").style.width = percent + "%";
