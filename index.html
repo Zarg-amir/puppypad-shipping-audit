@@ -13,11 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     />
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         background: radial-gradient(circle at top, #f9fafb 0, #e5e7eb 40%, #e2e8f0 100%);
@@ -26,10 +22,7 @@
         display: flex;
         justify-content: center;
       }
-      .container {
-        max-width: 1440px;
-        width: 100%;
-      }
+      .container { max-width: 1440px; width: 100%; }
       .app-shell {
         display: grid;
         grid-template-columns: 360px 1fr;
@@ -37,9 +30,7 @@
         align-items: flex-start;
       }
       @media (max-width: 1100px) {
-        .app-shell {
-          grid-template-columns: 1fr;
-        }
+        .app-shell { grid-template-columns: 1fr; }
       }
       .card {
         background: #ffffff;
@@ -47,21 +38,6 @@
         border: 1px solid #e2e8f0;
         padding: 1.5rem;
         box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
-      }
-      .card-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1rem;
-      }
-      .card-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0f172a;
-      }
-      .card-subtitle {
-        font-size: 0.85rem;
-        color: #64748b;
       }
       .logo-wrap {
         display: flex;
@@ -157,12 +133,8 @@
         margin-top: 0.4rem;
         line-height: 1.4;
       }
-      .helper-text strong {
-        color: #0f172a;
-      }
-      .field-group {
-        margin-bottom: 1rem;
-      }
+      .helper-text strong { color: #0f172a; }
+      .field-group { margin-bottom: 1rem; }
       label {
         display: block;
         font-size: 0.8rem;
@@ -217,12 +189,8 @@
         font-size: 0.8rem;
         margin-bottom: 1rem;
       }
-      .hidden {
-        display: none;
-      }
-      .progress-card {
-        margin-top: 1rem;
-      }
+      .hidden { display: none; }
+      .progress-card { margin-top: 1rem; }
       .progress-header {
         display: flex;
         justify-content: space-between;
@@ -266,22 +234,15 @@
         border: 1px solid #e5e7eb;
         background: #f9fafb;
         padding: 0.5rem 0.6rem;
-        font-family: 'SFMono-Regular', ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+          'Courier New', monospace;
         font-size: 0.75rem;
       }
-      .status-line {
-        color: #6b7280;
-        margin-bottom: 0.2rem;
-      }
-      .status-line.success {
-        color: #16a34a;
-      }
-      .status-line.error {
-        color: #ef4444;
-      }
-      .status-line.info {
-        color: #0ea5e9;
-      }
+      .status-line { color: #6b7280; margin-bottom: 0.2rem; }
+      .status-line.success { color: #16a34a; }
+      .status-line.error { color: #ef4444; }
+      .status-line.info { color: #0ea5e9; }
+
       /* Dashboard */
       .dashboard-header-row {
         display: flex;
@@ -318,15 +279,9 @@
         position: relative;
         overflow: hidden;
       }
-      .summary-card:nth-child(2) {
-        background: #f97316;
-      }
-      .summary-card:nth-child(3) {
-        background: #15803d;
-      }
-      .summary-card:nth-child(4) {
-        background: #0369a1;
-      }
+      .summary-card:nth-child(2) { background: #f97316; }
+      .summary-card:nth-child(3) { background: #15803d; }
+      .summary-card:nth-child(4) { background: #0369a1; }
       .summary-label {
         font-size: 0.8rem;
         text-transform: uppercase;
@@ -370,91 +325,11 @@
         gap: 1rem;
       }
       @media (max-width: 1100px) {
-        .two-col-main {
-          grid-template-columns: 1fr;
-        }
+        .two-col-main { grid-template-columns: 1fr; }
       }
-      .tab-nav {
-        display: inline-flex;
-        border-radius: 999px;
-        background: #f1f5f9;
-        padding: 0.25rem;
-        gap: 0.25rem;
-      }
-      .tab-pill {
-        border-radius: 999px;
-        padding: 0.35rem 0.9rem;
-        font-size: 0.8rem;
-        border: none;
-        background: transparent;
-        color: #64748b;
-        cursor: pointer;
-        font-weight: 600;
-      }
-      .tab-pill.active {
-        background: #0f172a;
-        color: #e5e7eb;
-      }
-      .tab-content {
-        margin-top: 1rem;
-      }
-      .table-container {
-        max-height: 420px;
-        overflow-y: auto;
-        border-radius: 10px;
-        border: 1px solid #e5e7eb;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.8rem;
-      }
-      thead {
-        position: sticky;
-        top: 0;
-        background: #f9fafb;
-        z-index: 1;
-      }
-      th,
-      td {
-        padding: 0.55rem 0.75rem;
-        text-align: left;
-      }
-      th {
-        font-weight: 600;
-        color: #475569;
-        border-bottom: 1px solid #e5e7eb;
-      }
-      td {
-        border-bottom: 1px solid #f1f5f9;
-        color: #334155;
-      }
-      tr:nth-child(even) td {
-        background: #f9fafb;
-      }
-      tr:hover td {
-        background: #eef2ff;
-      }
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.15rem 0.5rem;
-        border-radius: 999px;
-        font-size: 0.7rem;
-        font-weight: 600;
-      }
-      .chip-remote-ok {
-        background: #dcfce7;
-        color: #166534;
-      }
-      .chip-remote-warn {
-        background: #fef9c3;
-        color: #854d0e;
-      }
-      .chip-remote-bad {
-        background: #fee2e2;
-        color: #b91c1c;
+      .chart-wrap {
+        height: 260px;
+        position: relative;
       }
       .pill-filter {
         display: inline-flex;
@@ -484,9 +359,54 @@
         padding: 0.05rem 0.4rem;
         border-radius: 999px;
       }
-      .chart-wrap {
-        height: 280px;
-        position: relative;
+      .table-container {
+        max-height: 420px;
+        overflow-y: auto;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      thead {
+        position: sticky;
+        top: 0;
+        background: #f9fafb;
+        z-index: 1;
+      }
+      th, td {
+        padding: 0.55rem 0.75rem;
+        text-align: left;
+      }
+      th {
+        font-weight: 600;
+        color: #475569;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      td {
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+      }
+      tr:nth-child(even) td { background: #f9fafb; }
+      tr:hover td { background: #eef2ff; }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      .chip-remote-ok { background: #dcfce7; color: #166534; }
+      .chip-remote-warn { background: #fef9c3; color: #854d0e; }
+      .chip-remote-bad { background: #fee2e2; color: #b91c1c; }
+      .dashboard-subtext {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-top: 0.2rem;
       }
     </style>
   </head>
@@ -505,10 +425,11 @@
               </div>
               <div class="logo-text">
                 <h1>PuppyPad Shipping Auditor</h1>
-                <span>Audit shipping, surcharges & remote logic in one place.</span>
+                <span>Audit shipping, surcharges & remote fees in one place.</span>
               </div>
             </div>
 
+            <!-- Shipping Rate Files -->
             <div class="field-group">
               <div class="section-label">Shipping Rate Files</div>
               <div
@@ -521,7 +442,7 @@
                   <div>
                     <div class="file-label-main">Upload carrier rate Excel files</div>
                     <div class="file-label-sub">
-                      YunTu / Yanwen rate sheets – you can select multiple files.
+                      YunTu, Yanwen etc. You can select multiple files.
                     </div>
                   </div>
                 </div>
@@ -536,26 +457,12 @@
                 onchange="handleFileSelect('rates')"
               />
               <p class="helper-text">
-                <strong>Important:</strong> No rates are hard-coded in this app. All expected shipping
-                costs are calculated directly from the uploaded carrier rate files.
+                <strong>Note:</strong> No rates are hard-coded in this app. Expected shipping costs
+                are only calculated from these uploaded carrier rate sheets.
               </p>
-              <div class="field-group" style="margin-top: 0.5rem;">
-                <label for="activeRateSelect">Active rate file for this audit</label>
-                <select
-                  id="activeRateSelect"
-                  style="
-                    width: 100%;
-                    padding: 0.6rem 0.8rem;
-                    border-radius: 8px;
-                    border: 1px solid #cbd5e1;
-                    font-size: 0.85rem;
-                  "
-                >
-                  <option value="">No file selected</option>
-                </select>
-              </div>
             </div>
 
+            <!-- Mrek Orders -->
             <div class="field-group">
               <div class="section-label">Mrek Orders Invoice</div>
               <div
@@ -568,7 +475,7 @@
                   <div>
                     <div class="file-label-main">Upload Mrek invoice (orders) Excel</div>
                     <div class="file-label-sub">
-                      Contains order ID, shipping method, weight, costs, handling, remote, etc.
+                      Orders with shipping method, weight, shipping cost, handling & remote.
                     </div>
                   </div>
                 </div>
@@ -583,37 +490,7 @@
               />
             </div>
 
-            <div class="field-group">
-              <div class="section-label">Remote Address Reference (Optional)</div>
-              <div
-                class="file-upload"
-                id="remoteRefUpload"
-                onclick="document.getElementById('remoteRefFile').click()"
-              >
-                <div class="file-primary">
-                  <div class="file-icon">📍</div>
-                  <div>
-                    <div class="file-label-main">Upload remote address rules</div>
-                    <div class="file-label-sub">
-                      Format: Carrier | Country | State | ZipStart | ZipEnd
-                    </div>
-                  </div>
-                </div>
-                <div class="file-count" id="remoteRefCountLabel">Optional</div>
-              </div>
-              <input
-                type="file"
-                id="remoteRefFile"
-                accept=".xlsx,.xls"
-                style="display: none"
-                onchange="handleFileSelect('remoteRef')"
-              />
-              <p class="helper-text">
-                This file defines what <strong>should</strong> be considered a remote address (per
-                carrier). Example: all AK / HI / PR ZIP ranges for YunTu.
-              </p>
-            </div>
-
+            <!-- Remote Surcharge Log (Carrier) -->
             <div class="field-group">
               <div class="section-label">Remote Surcharge Log (Carrier)</div>
               <div
@@ -626,7 +503,7 @@
                   <div>
                     <div class="file-label-main">Upload carrier remote surcharge Excel</div>
                     <div class="file-label-sub">
-                      Export from YunTu / Yanwen remote surcharge report.
+                      Export from YunTu / Yanwen remote area surcharge report.
                     </div>
                   </div>
                 </div>
@@ -640,10 +517,10 @@
                 onchange="handleFileSelect('remoteSurcharge')"
               />
               <p class="helper-text">
-                This is the <strong>remote-area surcharge export</strong> from the shipping carrier
-                (e.g. YunTu). It lists which waybills <em>they</em> billed remote fees for (via
-                customer order number / waybill and a surcharge amount). The app uses it to verify
-                that Mrek’s invoice remote surcharges align with the carrier's actual charges.
+                This is the <strong>remote-area surcharge export</strong> from the carrier (e.g.
+                YunTu). It tells the app which customer orders/waybills the carrier actually
+                billed a remote fee for and the exact amount, so we can compare that with Mrek’s
+                invoice.
               </p>
             </div>
 
@@ -673,35 +550,28 @@
         </div>
 
         <!-- RIGHT: Dashboard -->
-        <div id="resultsContainer" class="hidden">
-          <!-- Filled by JS -->
-        </div>
+        <div id="resultsContainer" class="hidden"></div>
       </div>
     </div>
 
     <script>
-      // === GLOBAL STATE ===
-      let rateFileMetas = []; // {name, file}
+      // ========= GLOBAL STATE =========
+      let rateFileMetas = []; // {file, name, config}
       let ordersData = null;
-      let remoteRefData = null;
       let remoteSurchargeData = null;
-      let remoteRules = [];
-      let remoteSurchargeMap = {}; // key = packageNumber (customer order no), value = surchargeRMB
+      let remoteSurchargeMap = {}; // key = customer order/ package number -> surcharge RMB
       let resultsData = null;
 
-      // === GENERIC HELPERS ===
       function showError(msg) {
         const box = document.getElementById('errorBox');
         box.textContent = msg;
         box.classList.remove('hidden');
       }
-
       function clearError() {
         const box = document.getElementById('errorBox');
         box.classList.add('hidden');
         box.textContent = '';
       }
-
       function addStatusLog(message, type = 'info') {
         const log = document.getElementById('statusLog');
         const line = document.createElement('div');
@@ -710,7 +580,6 @@
         log.appendChild(line);
         log.scrollTop = log.scrollHeight;
       }
-
       function updateProgress(percent, text, status) {
         const container = document.getElementById('progressContainer');
         container.classList.remove('hidden');
@@ -720,11 +589,6 @@
         if (status) document.getElementById('progressStatus').textContent = status;
       }
 
-      function containsChinese(text) {
-        return /[\u4e00-\u9fa5]/.test(text);
-      }
-
-      // Call to your Vercel OpenAI proxy
       async function callOpenAI(prompt) {
         const response = await fetch('/api/openai', {
           method: 'POST',
@@ -740,15 +604,14 @@
           }),
         });
         if (!response.ok) {
-          const err = await response.text();
-          throw new Error(`OpenAI API failed: ${response.status} - ${err}`);
+          const text = await response.text();
+          throw new Error(`OpenAI API failed: ${response.status} - ${text}`);
         }
         const data = await response.json();
-        const text = data?.choices?.[0]?.message?.content;
-        if (!text) throw new Error('Invalid OpenAI response');
-        return text;
+        const msg = data?.choices?.[0]?.message?.content;
+        if (!msg) throw new Error('Invalid OpenAI response');
+        return msg;
       }
-
       function extractJSON(text) {
         let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const match = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
@@ -756,109 +619,109 @@
         return JSON.parse(cleaned);
       }
 
-      // === FILE HANDLERS ===
+      // ========== FILE HANDLING ==========
       function handleFileSelect(type) {
         clearError();
-        const input = document.getElementById(
+        const input =
           type === 'rates'
-            ? 'ratesFile'
+            ? document.getElementById('ratesFile')
             : type === 'orders'
-            ? 'ordersFile'
-            : type === 'remoteRef'
-            ? 'remoteRefFile'
-            : 'remoteSurchargeFile'
-        );
+            ? document.getElementById('ordersFile')
+            : document.getElementById('remoteSurchargeFile');
+
         if (!input.files || !input.files.length) return;
 
         if (type === 'rates') {
-          rateFileMetas = Array.from(input.files).map((f) => ({ file: f, name: f.name }));
+          rateFileMetas = Array.from(input.files).map((file) => ({ file, name: file.name }));
           const label = document.getElementById('ratesCountLabel');
           const upload = document.getElementById('ratesUpload');
           upload.classList.add('has-file');
-          label.textContent = `${rateFileMetas.length} file${rateFileMetas.length > 1 ? 's' : ''}`;
-          // Populate select
-          const select = document.getElementById('activeRateSelect');
-          select.innerHTML = '<option value="">Select a rate file</option>';
-          rateFileMetas.forEach((meta, idx) => {
-            const opt = document.createElement('option');
-            opt.value = String(idx);
-            opt.textContent = meta.name;
-            select.appendChild(opt);
-          });
-          if (rateFileMetas.length === 1) select.value = '0';
+          label.textContent = `${rateFileMetas.length} file${
+            rateFileMetas.length > 1 ? 's' : ''
+          }`;
+        } else if (type === 'orders') {
+          const file = input.files[0];
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type: 'array' });
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            ordersData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            document.getElementById('ordersUpload').classList.add('has-file');
+            document.getElementById('ordersCountLabel').textContent = file.name;
+          };
+          reader.readAsArrayBuffer(file);
         } else {
           const file = input.files[0];
           const reader = new FileReader();
           reader.onload = (e) => {
             const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
-
-            if (type === 'orders') {
-              ordersData = jsonData;
-              document.getElementById('ordersUpload').classList.add('has-file');
-              document.getElementById('ordersCountLabel').textContent = file.name;
-            } else if (type === 'remoteRef') {
-              remoteRefData = jsonData;
-              document.getElementById('remoteRefUpload').classList.add('has-file');
-              document.getElementById('remoteRefCountLabel').textContent = file.name;
-            } else if (type === 'remoteSurcharge') {
-              remoteSurchargeData = jsonData;
-              document.getElementById('remoteSurchargeUpload').classList.add('has-file');
-              document.getElementById('remoteSurchargeCountLabel').textContent = file.name;
-            }
+            const wb = XLSX.read(data, { type: 'array' });
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            remoteSurchargeData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            document.getElementById('remoteSurchargeUpload').classList.add('has-file');
+            document.getElementById('remoteSurchargeCountLabel').textContent = file.name;
           };
           reader.readAsArrayBuffer(file);
         }
       }
 
-      // === REMOTE ADDRESS REFERENCE PARSE ===
-      function parseRemoteRefSheet(data) {
-        remoteRules = [];
-        if (!data || data.length < 2) return;
-        // Expect header row then data rows:
-        // Carrier | Country | State | ZipStart | ZipEnd
-        for (let i = 1; i < data.length; i++) {
-          const row = data[i];
-          if (!row || row.length === 0) continue;
-          const carrier = (row[0] || '').toString().trim().toLowerCase();
-          const country = (row[1] || '').toString().trim().toUpperCase();
-          const state = (row[2] || '').toString().trim().toUpperCase() || null;
-          const zipStart =
-            row[3] !== undefined && row[3] !== '' ? String(row[3]).padStart(5, '0') : null;
-          const zipEnd =
-            row[4] !== undefined && row[4] !== '' ? String(row[4]).padStart(5, '0') : null;
-          if (!country && !zipStart && !zipEnd) continue;
-          remoteRules.push({ carrier, country, state, zipStart, zipEnd });
-        }
+      // ========= RATE SHEETS =========
+      function parseWeightRange(rangeStr) {
+        if (!rangeStr) return null;
+        const match = rangeStr.toString().match(/([\d.]+)[＜<].*?[≤<=]([\d.]+)/);
+        if (!match) return null;
+        return {
+          minWeight: parseFloat(match[1]),
+          maxWeight: parseFloat(match[2]),
+        };
       }
 
-      function inferCarrierKey(shippingLine) {
-        const s = (shippingLine || '').toLowerCase();
+      function parseRateSheet(jsonData) {
+        const ratesByCountry = {};
+        let currentCountry = null;
+
+        for (let i = 2; i < jsonData.length; i++) {
+          const row = jsonData[i];
+          if (!row || row.length < 7) continue;
+
+          if (row[0] && typeof row[0] === 'string' && row[0].trim()) {
+            currentCountry = row[0].toString().trim();
+            const normalized = currentCountry.toUpperCase();
+            if (!ratesByCountry[normalized]) ratesByCountry[normalized] = [];
+          }
+
+          const weightRange = row[3];
+          const costPerKg = row[6];
+          const fee = row[7];
+
+          if (currentCountry && weightRange && costPerKg !== undefined && costPerKg !== '') {
+            const parsed = parseWeightRange(weightRange.toString());
+            if (parsed) {
+              const normalized = currentCountry.toUpperCase();
+              ratesByCountry[normalized].push({
+                minWeight: parsed.minWeight,
+                maxWeight: parsed.maxWeight,
+                costPerKg: parseFloat(costPerKg),
+                fixedFee: parseFloat(fee) || 0,
+                details: `${parsed.minWeight}-${parsed.maxWeight}kg @ ¥${costPerKg}/kg + ¥${
+                  fee || 0
+                } fee`,
+              });
+            }
+          }
+        }
+        return ratesByCountry;
+      }
+
+      function inferCarrierKeyFromString(text) {
+        const s = (text || '').toLowerCase();
         if (s.includes('yuntu') || s.includes('yunexpress') || s.includes('云途')) return 'yuntu';
         if (s.includes('yanwen') || s.includes('燕文')) return 'yanwen';
         return '';
       }
 
-      function isAddressRemote(order) {
-        if (!remoteRules.length) return false;
-        const country = (order.country || '').toUpperCase();
-        const state = (order.state || '').toUpperCase();
-        const zip = (order.postCode || '').toString().padStart(5, '0');
-        const carrierKey = inferCarrierKey(order.shippingLine);
-
-        return remoteRules.some((rule) => {
-          if (rule.carrier && carrierKey && !carrierKey.includes(rule.carrier)) return false;
-          if (rule.country && rule.country !== country) return false;
-          if (rule.state && rule.state !== state) return false;
-          if (rule.zipStart && rule.zipEnd && zip >= rule.zipStart && zip <= rule.zipEnd)
-            return true;
-          return false;
-        });
-      }
-
-      // === REMOTE SURCHARGE LOG PARSE (CARRIER) ===
+      // ========= REMOTE SURCHARGE LOG (CARRIER) =========
       function parseRemoteSurchargeSheet(data) {
         remoteSurchargeMap = {};
         if (!data || data.length < 2) return;
@@ -867,13 +730,13 @@
         let amountIdx = -1;
 
         header.forEach((h, idx) => {
-          if (h.includes('客户单号')) customerIdx = idx;
-          if (h.includes('偏远附加费')) amountIdx = idx;
+          if (h.includes('客户单号')) customerIdx = idx;      // customer order no
+          if (h.includes('偏远附加费')) amountIdx = idx;      // remote surcharge RMB
         });
 
         if (customerIdx === -1 || amountIdx === -1) {
           addStatusLog(
-            'Remote Surcharge log: could not detect 客户单号 / 偏远附加费 columns. Skipping carrier-remote comparison.',
+            'Remote surcharge log: could not detect 客户单号 / 偏远附加费 columns. Skipping carrier-remote comparison.',
             'info'
           );
           return;
@@ -889,61 +752,12 @@
         }
       }
 
-      // === RATE SHEET PARSE (GENERIC YUN-TYPE) ===
-      function parseRateSheet(jsonData) {
-        // We assume a YunTu-like layout:
-        // Row 0/1: meta, Row 1: header, from row2: [Country, ..., Weight(KG) at col3, Shipping cost RMB/kg at col6, Registration/fee at col7]
-        const ratesByCountry = {};
-        let currentCountry = null;
-
-        for (let i = 2; i < jsonData.length; i++) {
-          const row = jsonData[i];
-          if (!row || row.length < 7) continue;
-
-          if (row[0] && typeof row[0] === 'string' && row[0].trim()) {
-            currentCountry = row[0].toString().trim();
-            const normalized = currentCountry.toUpperCase();
-            if (!ratesByCountry[normalized]) ratesByCountry[normalized] = [];
-          }
-
-          const weightRange = row[3]; // Weight (KG)
-          const costPerKg = row[6];
-          const fee = row[7];
-
-          if (currentCountry && weightRange && costPerKg !== undefined && costPerKg !== '') {
-            const parsed = parseWeightRange(weightRange.toString());
-            if (parsed) {
-              const normalized = currentCountry.toUpperCase();
-              ratesByCountry[normalized].push({
-                minWeight: parsed.minWeight,
-                maxWeight: parsed.maxWeight,
-                costPerKg: parseFloat(costPerKg),
-                fixedFee: parseFloat(fee) || 0,
-                details: `${parsed.minWeight}-${parsed.maxWeight}kg @ ¥${costPerKg}/kg + ¥${fee || 0} fee`,
-              });
-            }
-          }
-        }
-
-        return ratesByCountry;
-      }
-
-      function parseWeightRange(rangeStr) {
-        if (!rangeStr) return null;
-        // Accept formats like "0＜W≤0.1" or "0.1＜W≤0.2"
-        const match = rangeStr.match(/([\d.]+)[＜<].*?[≤<=]([\d.]+)/);
-        if (!match) return null;
-        return {
-          minWeight: parseFloat(match[1]),
-          maxWeight: parseFloat(match[2]),
-        };
-      }
-
-      // === ANALYZE ===
+      // ========= ANALYZE =========
       async function analyzeOrders() {
         clearError();
-        document.getElementById('resultsContainer').classList.add('hidden');
-        document.getElementById('resultsContainer').innerHTML = '';
+        const resultsContainer = document.getElementById('resultsContainer');
+        resultsContainer.classList.add('hidden');
+        resultsContainer.innerHTML = '';
         document.getElementById('statusLog').innerHTML = '';
         document.getElementById('progressContainer').classList.add('hidden');
 
@@ -954,64 +768,62 @@
           if (!rateFileMetas.length) throw new Error('Upload at least one shipping rate Excel file.');
           if (!ordersData) throw new Error('Upload the Mrek orders invoice Excel file.');
 
-          const activeIndex = document.getElementById('activeRateSelect').value;
-          if (activeIndex === '') throw new Error('Select which rate file to use for this audit.');
-
           const exchangeRate = parseFloat(document.getElementById('exchangeRate').value);
           if (isNaN(exchangeRate) || exchangeRate <= 0)
             throw new Error('Please provide a valid CNY → USD exchange rate.');
 
-          updateProgress(5, 'Reading selected rate file…', 'Loading Excel');
+          updateProgress(5, 'Loading carrier rate files…', '');
 
-          // Read the selected rate file now
-          const rateMeta = rateFileMetas[parseInt(activeIndex, 10)];
-          const rateArrayBuffer = await rateMeta.file.arrayBuffer();
-          const rateWorkbook = XLSX.read(new Uint8Array(rateArrayBuffer), { type: 'array' });
-          const rateSheet = rateWorkbook.Sheets[rateWorkbook.SheetNames[0]];
-          const rateJson = XLSX.utils.sheet_to_json(rateSheet, { header: 1, defval: '' });
+          // Load & parse all rate files
+          const rateConfigs = [];
+          for (let idx = 0; idx < rateFileMetas.length; idx++) {
+            const meta = rateFileMetas[idx];
+            const buffer = await meta.file.arrayBuffer();
+            const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
-          // The shipping line name (just for display / matching carrier string)
-          const shippingLineNameGuess =
-            rateJson[1] && rateJson[1][0] ? rateJson[1][0].toString().trim() : rateMeta.name;
+            const shippingLineNameGuess =
+              json[1] && json[1][0] ? json[1][0].toString().trim() : meta.name;
+            const ratesByCountry = parseRateSheet(json);
+            const carrierKey = inferCarrierKeyFromString(meta.name + ' ' + shippingLineNameGuess);
+            const countryCount = Object.keys(ratesByCountry).length;
 
-          // Parse rates
-          const ratesByCountry = parseRateSheet(rateJson);
-          const totalCountries = Object.keys(ratesByCountry).length;
-          updateProgress(15, 'Rate sheet parsed', `${totalCountries} countries detected`);
-          addStatusLog(
-            `Active rate file "${rateMeta.name}" parsed with ${totalCountries} countries.`,
-            'success'
-          );
+            rateConfigs.push({
+              fileName: meta.name,
+              shippingLineGuess: shippingLineNameGuess,
+              carrierKey,
+              ratesByCountry,
+            });
 
-          // Parse remote reference
-          if (remoteRefData) {
-            parseRemoteRefSheet(remoteRefData);
-            addStatusLog(`Loaded ${remoteRules.length} remote address rules.`, 'success');
-          } else {
-            addStatusLog('No Remote Address Reference uploaded – address-remote checks limited.', 'info');
+            addStatusLog(
+              `Parsed rate file "${meta.name}" (${carrierKey || 'unknown carrier'}) – ${countryCount} countries.`,
+              'success'
+            );
           }
 
-          // Parse remote surcharge log
+          if (!rateConfigs.length) throw new Error('No valid rate tables found in uploaded files.');
+
+          // Remote surcharge log
           if (remoteSurchargeData) {
             parseRemoteSurchargeSheet(remoteSurchargeData);
             const countKeys = Object.keys(remoteSurchargeMap).length;
             addStatusLog(
-              `Loaded carrier remote surcharge entries for ${countKeys} package/customer IDs.`,
+              `Loaded carrier remote surcharge entries for ${countKeys} customer order IDs.`,
               'success'
             );
           } else {
             addStatusLog(
-              'No Remote Surcharge Log uploaded – cannot compare carrier-billed remote surcharges.',
+              'No Remote Surcharge Log uploaded – will only use remote charges from Mrek invoice.',
               'info'
             );
           }
 
+          // AI column detection for orders
           updateProgress(25, 'Detecting invoice columns…', 'AI column mapping');
-
-          // AI column detection on orders
-          const sampleRows = ordersData.slice(0, 5).map((r) => r.join('|')).join('\n');
+          const orderSample = ordersData.slice(0, 5).map((r) => r.join('|')).join('\n');
           const colPrompt = `Identify column indices (0-based) in this Mrek orders data:
-${sampleRows}
+${orderSample}
 
 Return ONLY JSON with integer indices (or -1 if not present) for:
 {
@@ -1029,14 +841,11 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
   "remoteCnyCol":11,
   "packageNumberCol":12
 }`;
-
           const colResponse = await callOpenAI(colPrompt);
           const colMap = extractJSON(colResponse);
-
           addStatusLog(`Column map detected: ${JSON.stringify(colMap)}`, 'info');
-          updateProgress(40, 'Invoice columns mapped', 'Parsing Mrek orders');
 
-          // Parse all orders
+          updateProgress(40, 'Parsing Mrek orders…', '');
           const allOrders = [];
           const getVal = (row, idx) =>
             idx !== undefined && idx !== null && idx >= 0 ? row[idx] : '';
@@ -1044,7 +853,6 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
           for (let i = 1; i < ordersData.length; i++) {
             const row = ordersData[i];
             if (!row) continue;
-
             const orderId = (getVal(row, colMap.orderIdCol) || '').toString().trim();
             if (!orderId) continue;
 
@@ -1061,7 +869,9 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             const remoteUSD = parseFloat(getVal(row, colMap.remoteUsdCol)) || 0;
             const remoteCNY = parseFloat(getVal(row, colMap.remoteCnyCol)) || 0;
 
-            const packageNumber = (getVal(row, colMap.packageNumberCol) || '').toString().trim();
+            const packageNumber = (getVal(row, colMap.packageNumberCol) || '')
+              .toString()
+              .trim();
 
             allOrders.push({
               orderId,
@@ -1080,10 +890,10 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             });
           }
 
-          updateProgress(55, 'Orders parsed', `${allOrders.length} orders ready for audit`);
           addStatusLog(`${allOrders.length} orders will be audited.`, 'success');
+          updateProgress(55, 'Matching orders to carriers…', '');
 
-          // Match orders to rates & remote logic
+          // Audit results
           const results = {
             overcharge: [],
             undercharge: [],
@@ -1092,21 +902,42 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             remoteOrders: [],
           };
 
+          function pickRateConfigForOrder(order) {
+            const orderCarrier = inferCarrierKeyFromString(order.shippingLine);
+            if (orderCarrier) {
+              const match = rateConfigs.find((c) => c.carrierKey === orderCarrier);
+              if (match) return match;
+            }
+            // fallback: if only one config, use it
+            if (rateConfigs.length === 1) return rateConfigs[0];
+            // otherwise no clear match
+            return null;
+          }
+
           const total = allOrders.length;
           for (let i = 0; i < total; i++) {
             const order = allOrders[i];
+
             if (i % 100 === 0) {
               const pct = 55 + (i / total) * 35;
               updateProgress(pct, 'Auditing orders…', `${i}/${total} processed`);
             }
 
-            const countryKey = (order.country || '').toUpperCase();
-            const countryRates = ratesByCountry[countryKey];
+            const config = pickRateConfigForOrder(order);
+            if (!config) {
+              results.invalid.push({
+                ...order,
+                reason: `No matching rate sheet for shipping method "${order.shippingLine}"`,
+              });
+              continue;
+            }
 
+            const countryKey = (order.country || '').toUpperCase();
+            const countryRates = config.ratesByCountry[countryKey];
             if (!countryRates || !countryRates.length) {
               results.invalid.push({
                 ...order,
-                reason: `No rate row for country "${order.country}" in selected rate file`,
+                reason: `No rate row for country "${order.country}" in rate file "${config.fileName}"`,
               });
               continue;
             }
@@ -1118,17 +949,17 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               const ranges = countryRates.map((b) => `${b.minWeight}-${b.maxWeight}`).join(', ');
               results.invalid.push({
                 ...order,
-                reason: `Weight ${order.totalWeight}kg out of range for ${order.country}. Available ranges: ${ranges}`,
+                reason: `Weight ${order.totalWeight}kg out of range for ${order.country} in file "${config.fileName}". Ranges: ${ranges}`,
               });
               continue;
             }
 
+            // Expected base shipping cost from rate sheet (no hard-coded numbers)
             const expectedCNY = order.totalWeight * bracket.costPerKg + bracket.fixedFee;
             const expectedUSD = expectedCNY / exchangeRate;
             const diff = order.chargedUSD - expectedUSD;
 
-            // Remote logic
-            const addressIsRemote = isAddressRemote(order);
+            // Remote logic: only compare Mrek vs Carrier based on logs
             const mrekRemoteUSD =
               order.remoteUSD || (order.remoteCNY ? order.remoteCNY / exchangeRate : 0);
             const mrekChargedRemote = mrekRemoteUSD > 0.01;
@@ -1144,19 +975,14 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               order.handlingUSD || (order.handlingCNY ? order.handlingCNY / exchangeRate : 0);
             const totalChargedUSD = order.chargedUSD + handlingUSD + mrekRemoteUSD;
 
-            let remoteStatus = 'Not remote';
-            if (addressIsRemote && carrierChargedRemote && mrekChargedRemote) {
-              remoteStatus = '✅ Remote address & remote charged (Carrier + Mrek)';
-            } else if (addressIsRemote && !carrierChargedRemote && !mrekChargedRemote) {
-              remoteStatus = '⚠ Remote address but no remote fee charged';
-            } else if (!addressIsRemote && (carrierChargedRemote || mrekChargedRemote)) {
-              remoteStatus = '❌ Remote surcharge charged but address not in remote rules';
-            } else if (addressIsRemote && carrierChargedRemote && !mrekChargedRemote) {
+            let remoteStatus = 'No remote surcharge';
+            if (carrierChargedRemote && mrekChargedRemote) {
+              remoteStatus = '✅ Carrier & Mrek both charged remote';
+            } else if (carrierChargedRemote && !mrekChargedRemote) {
+              remoteStatus = '⚠ Carrier charged remote, Mrek did NOT pass it';
+            } else if (!carrierChargedRemote && mrekChargedRemote) {
               remoteStatus =
-                '⚠ Carrier charged remote, Mrek did NOT pass it (you are absorbing the cost)';
-            } else if (addressIsRemote && !carrierChargedRemote && mrekChargedRemote) {
-              remoteStatus =
-                '❌ Mrek charged remote but carrier log shows no remote surcharge for this package';
+                '❌ Mrek charged remote but carrier log shows no remote surcharge for this order';
             }
 
             const processed = {
@@ -1166,15 +992,15 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               difference: diff.toFixed(2),
               bracket: bracket.details,
               exchangeRate,
-              addressIsRemote,
               mrekRemoteUSD: mrekRemoteUSD.toFixed(2),
               carrierRemoteUSD: carrierRemoteUSD.toFixed(2),
               handlingUSD: handlingUSD.toFixed(2),
               totalChargedUSD: totalChargedUSD.toFixed(2),
               remoteStatus,
+              rateFileName: config.fileName,
             };
 
-            if (addressIsRemote || carrierChargedRemote || mrekChargedRemote) {
+            if (carrierChargedRemote || mrekChargedRemote) {
               results.remoteOrders.push(processed);
             }
 
@@ -1192,9 +1018,9 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             }
           }
 
-          updateProgress(95, 'Finalizing…', 'Building dashboard');
           resultsData = results;
-          renderDashboard(results, rateMeta.name, shippingLineNameGuess);
+          updateProgress(95, 'Building dashboard…', '');
+          renderDashboard(results);
           updateProgress(100, 'Audit complete', 'Done');
         } catch (err) {
           console.error(err);
@@ -1206,8 +1032,8 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
         }
       }
 
-      // === DASHBOARD RENDER ===
-      function renderDashboard(results, rateFileName, shippingLineNameGuess) {
+      // ========= DASHBOARD =========
+      function renderDashboard(results) {
         const container = document.getElementById('resultsContainer');
         container.classList.remove('hidden');
 
@@ -1224,15 +1050,16 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
         const underchargeTotal = Math.abs(
           results.undercharge.reduce((sum, o) => sum + parseFloat(o.difference), 0)
         );
-
         const accuracyPct = totalOrders ? ((accurateOrders / totalOrders) * 100).toFixed(1) : '0.0';
 
-        const remoteMismatchCount = results.remoteOrders.filter((o) =>
-          o.remoteStatus.startsWith('❌')
+        const remoteOk = results.remoteOrders.filter((o) =>
+          o.remoteStatus.startsWith('✅')
         ).length;
-
-        const remoteWarnCount = results.remoteOrders.filter((o) =>
+        const remoteWarn = results.remoteOrders.filter((o) =>
           o.remoteStatus.startsWith('⚠')
+        ).length;
+        const remoteBad = results.remoteOrders.filter((o) =>
+          o.remoteStatus.startsWith('❌')
         ).length;
 
         container.innerHTML = `
@@ -1241,7 +1068,10 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               <div class="dashboard-title-wrap">
                 <div class="dashboard-title">Audit Results</div>
                 <div class="dashboard-subtitle">
-                  Rate file: <strong>${rateFileName}</strong> · Shipping line guess: <strong>${shippingLineNameGuess}</strong>
+                  All uploaded shipping rate files were used to match carriers (YunTu, Yanwen, etc.)
+                </div>
+                <div class="dashboard-subtext">
+                  No rates or surcharges are hard-coded. All values are calculated strictly from the uploaded Excel files.
                 </div>
               </div>
             </div>
@@ -1257,30 +1087,26 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               <div class="summary-card">
                 <div class="summary-label">Total Overcharge</div>
                 <div class="summary-value">$${overchargeTotal.toFixed(2)}</div>
-                <div class="summary-meta">On ${results.overcharge.length} orders</div>
+                <div class="summary-meta">${results.overcharge.length} orders overcharged</div>
               </div>
               <div class="summary-card">
                 <div class="summary-label">Total Undercharge</div>
                 <div class="summary-value">$${underchargeTotal.toFixed(2)}</div>
-                <div class="summary-meta">On ${results.undercharge.length} orders</div>
+                <div class="summary-meta">${results.undercharge.length} orders undercharged</div>
               </div>
               <div class="summary-card">
-                <div class="summary-label">Remote & Surcharges</div>
+                <div class="summary-label">Remote Orders</div>
                 <div class="summary-value">${results.remoteOrders.length}</div>
                 <div class="summary-meta">
                   <span class="badge ${
-                    remoteMismatchCount === 0 && remoteWarnCount === 0
-                      ? 'success'
-                      : remoteMismatchCount > 0
-                      ? 'error'
-                      : 'warn'
+                    remoteBad > 0 ? 'error' : remoteWarn > 0 ? 'warn' : 'success'
                   }">
                     ${
-                      remoteMismatchCount === 0 && remoteWarnCount === 0
-                        ? 'All consistent'
-                        : remoteMismatchCount > 0
-                        ? `${remoteMismatchCount} hard mismatches`
-                        : `${remoteWarnCount} warnings`
+                      remoteBad > 0
+                        ? `${remoteBad} mismatches vs carrier`
+                        : remoteWarn > 0
+                        ? `${remoteWarn} warnings`
+                        : 'All remote charges consistent'
                     }
                   </span>
                 </div>
@@ -1292,7 +1118,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <div class="card-header">
                   <div>
                     <div class="card-title">Charge Accuracy</div>
-                    <div class="card-subtitle">Distribution of over/under/accurate/invalid</div>
+                    <div class="card-subtitle">Over/Under/Accurate/Invalid distribution</div>
                   </div>
                 </div>
                 <div class="chart-wrap">
@@ -1302,8 +1128,8 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               <div class="card" style="box-shadow:none;border-radius:14px;">
                 <div class="card-header">
                   <div>
-                    <div class="card-title">Remote Status</div>
-                    <div class="card-subtitle">How remote surcharges align with addresses</div>
+                    <div class="card-title">Remote Surcharge Alignment</div>
+                    <div class="card-subtitle">How Mrek vs Carrier remote fees line up</div>
                   </div>
                 </div>
                 <div class="chart-wrap">
@@ -1317,7 +1143,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <div class="card-header">
                   <div>
                     <div class="card-title">Orders by Charge Type</div>
-                    <div class="card-subtitle">Filter by overcharged, undercharged, accurate, invalid</div>
+                    <div class="card-subtitle">Filter between overcharged, undercharged, accurate, invalid</div>
                   </div>
                   <div class="pill-filter">
                     <button class="pill-btn active" data-filter="all" onclick="switchOrdersFilter(event, 'all')">
@@ -1346,7 +1172,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <div class="card-header">
                   <div>
                     <div class="card-title">Remote Audit Table</div>
-                    <div class="card-subtitle">One row per remote-related order</div>
+                    <div class="card-subtitle">One row for every order with any remote fee</div>
                   </div>
                   <button class="pill-btn" onclick="downloadExcel('remoteOrders')">
                     ⬇ Download Remote Orders
@@ -1360,8 +1186,64 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
           </div>
         `;
 
-        // Render charts
-        renderCharts(results, accuracyPct);
+        // Charts
+        const ctx1 = document.getElementById('accuracyChart').getContext('2d');
+        const ctx2 = document.getElementById('remoteChart').getContext('2d');
+
+        new Chart(ctx1, {
+          type: 'doughnut',
+          data: {
+            labels: ['Overcharged', 'Undercharged', 'Accurate', 'Invalid'],
+            datasets: [
+              {
+                data: [
+                  results.overcharge.length,
+                  results.undercharge.length,
+                  results.accurate.length,
+                  results.invalid.length,
+                ],
+                backgroundColor: ['#f97316', '#22c55e', '#0ea5e9', '#9ca3af'],
+              },
+            ],
+          },
+          options: {
+            plugins: {
+              legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 11 } } },
+              tooltip: { enabled: true },
+            },
+            cutout: '60%',
+          },
+        });
+
+        const remoteOk = results.remoteOrders.filter((o) =>
+          o.remoteStatus.startsWith('✅')
+        ).length;
+        const remoteWarn = results.remoteOrders.filter((o) =>
+          o.remoteStatus.startsWith('⚠')
+        ).length;
+        const remoteBad = results.remoteOrders.filter((o) =>
+          o.remoteStatus.startsWith('❌')
+        ).length;
+
+        new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: ['OK (Carrier & Mrek)', 'Warnings', 'Mismatches'],
+            datasets: [
+              {
+                data: [remoteOk, remoteWarn, remoteBad],
+                backgroundColor: ['#22c55e', '#eab308', '#ef4444'],
+              },
+            ],
+          },
+          options: {
+            plugins: { legend: { display: false }, tooltip: { enabled: true } },
+            scales: {
+              x: { ticks: { font: { size: 11 } } },
+              y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } },
+            },
+          },
+        });
       }
 
       function renderOrdersTable(filter, results) {
@@ -1376,22 +1258,22 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
         } else {
           rows = results[filter] || [];
         }
-
         if (!rows.length) {
           return `<p style="padding:1rem;font-size:0.85rem;color:#9ca3af;">No orders for this filter.</p>`;
         }
 
-        const header = `
+        const head = `
           <table>
             <thead>
               <tr>
                 <th>Order #</th>
                 <th>Country</th>
                 <th>State / ZIP</th>
+                <th>Carrier Rate File</th>
                 <th>Weight (kg)</th>
                 <th>Ship (USD)</th>
                 <th>Handling (USD)</th>
-                <th>Remote (USD)</th>
+                <th>Mrek Remote (USD)</th>
                 <th>Total (USD)</th>
                 <th>Expected (USD)</th>
                 <th>Diff</th>
@@ -1411,6 +1293,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <td>${o.orderId}</td>
                 <td>${o.country || ''}</td>
                 <td>${(o.state || '') + ' ' + (o.postCode || '')}</td>
+                <td>${o.rateFileName || ''}</td>
                 <td>${o.totalWeight}</td>
                 <td>$${o.chargedUSD.toFixed ? o.chargedUSD.toFixed(2) : o.chargedUSD}</td>
                 <td>$${o.handlingUSD || '0.00'}</td>
@@ -1423,14 +1306,14 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             `;
           })
           .join('');
-        return header + body + '</tbody></table>';
+        return head + body + '</tbody></table>';
       }
 
       function renderRemoteTable(remoteOrders) {
         if (!remoteOrders.length) {
-          return `<p style="padding:1rem;font-size:0.85rem;color:#9ca3af;">No remote-related orders found.</p>`;
+          return `<p style="padding:1rem;font-size:0.85rem;color:#9ca3af;">No orders with any remote fee found.</p>`;
         }
-        const rows = remoteOrders
+        const body = remoteOrders
           .map((o) => {
             let chipClass = 'chip-remote-ok';
             if (o.remoteStatus.startsWith('❌')) chipClass = 'chip-remote-bad';
@@ -1446,11 +1329,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <td>$${o.mrekRemoteUSD}</td>
                 <td>$${o.carrierRemoteUSD}</td>
                 <td>$${o.totalChargedUSD}</td>
-                <td>
-                  <span class="chip ${chipClass}">
-                    ${o.remoteStatus}
-                  </span>
-                </td>
+                <td><span class="chip ${chipClass}">${o.remoteStatus}</span></td>
               </tr>
             `;
           })
@@ -1467,88 +1346,12 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <th>Mrek Remote (USD)</th>
                 <th>Carrier Remote (USD)</th>
                 <th>Total (USD)</th>
-                <th>Remote Status</th>
+                <th>Status</th>
               </tr>
             </thead>
-            <tbody>${rows}</tbody>
+            <tbody>${body}</tbody>
           </table>
         `;
-      }
-
-      function renderCharts(results, accuracyPct) {
-        const ctx1 = document.getElementById('accuracyChart').getContext('2d');
-        const ctx2 = document.getElementById('remoteChart').getContext('2d');
-
-        const accData = {
-          labels: ['Overcharged', 'Undercharged', 'Accurate', 'Invalid'],
-          datasets: [
-            {
-              data: [
-                results.overcharge.length,
-                results.undercharge.length,
-                results.accurate.length,
-                results.invalid.length,
-              ],
-              backgroundColor: ['#f97316', '#22c55e', '#0ea5e9', '#9ca3af'],
-            },
-          ],
-        };
-
-        new Chart(ctx1, {
-          type: 'doughnut',
-          data: accData,
-          options: {
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: { boxWidth: 14, font: { size: 11 } },
-              },
-              tooltip: { enabled: true },
-            },
-            cutout: '60%',
-          },
-        });
-
-        const remoteOk = results.remoteOrders.filter((o) =>
-          o.remoteStatus.startsWith('✅')
-        ).length;
-        const remoteWarn = results.remoteOrders.filter((o) =>
-          o.remoteStatus.startsWith('⚠')
-        ).length;
-        const remoteBad = results.remoteOrders.filter((o) =>
-          o.remoteStatus.startsWith('❌')
-        ).length;
-        const remoteNone = results.remoteOrders.filter((o) =>
-          o.remoteStatus === 'Not remote'
-        ).length;
-
-        new Chart(ctx2, {
-          type: 'bar',
-          data: {
-            labels: ['OK', 'Warnings', 'Mismatches', 'Other remote'],
-            datasets: [
-              {
-                data: [remoteOk, remoteWarn, remoteBad, remoteNone],
-                backgroundColor: ['#22c55e', '#eab308', '#ef4444', '#94a3b8'],
-              },
-            ],
-          },
-          options: {
-            plugins: {
-              legend: { display: false },
-              tooltip: { enabled: true },
-            },
-            scales: {
-              x: {
-                ticks: { font: { size: 11 } },
-              },
-              y: {
-                beginAtZero: true,
-                ticks: { stepSize: 1, font: { size: 11 } },
-              },
-            },
-          },
-        });
       }
 
       function switchOrdersFilter(evt, filter) {
@@ -1577,7 +1380,6 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
         const worksheet = workbook.addWorksheet(type);
 
         const isInvalid = type === 'invalid';
-
         const headers = isInvalid
           ? [
               'Order ID',
@@ -1608,6 +1410,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               'Bracket',
               'Remote Status',
               'Shipping Method',
+              'Rate File',
             ];
 
         worksheet.addRow(headers).font = { bold: true };
@@ -1644,6 +1447,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               o.bracket || '',
               o.remoteStatus || '',
               o.shippingLine || '',
+              o.rateFileName || '',
             ]);
           }
         });
@@ -1661,7 +1465,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
       }
 
       window.addEventListener('DOMContentLoaded', () => {
-        // No URL memory for now, just a clean load.
+        // nothing special on load for now
       });
     </script>
   </body>
