@@ -72,7 +72,8 @@
                 margin-bottom: 0.5rem;
                 font-size: 0.875rem;
             }
-            input[type="number"] {
+            input[type="number"],
+            input[type="text"] {
                 padding: 0.875rem 1rem;
                 background: #ffffff;
                 border: 1px solid #cbd5e1;
@@ -81,8 +82,10 @@
                 color: #1e293b;
                 transition: all 0.2s;
                 font-family: 'Inter', sans-serif;
+                width: 100%;
             }
-            input[type="number"]::placeholder {
+            input[type="number"]::placeholder,
+            input[type="text"]::placeholder {
                 color: #94a3b8;
             }
             input:focus {
@@ -419,7 +422,9 @@
                     </div>
                     <h1>PuppyPad Shipping Auditor</h1>
                 </div>
+
                 <div class="form-row">
+                    <!-- Shipping Line Charges -->
                     <div class="form-group">
                         <label>📊 Shipping Line Charges</label>
                         <div class="input-toggle">
@@ -433,9 +438,11 @@
                             <input type="file" id="ratesFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('rates')" />
                         </div>
                         <div class="input-option active" id="rates-link">
-                            <input type="text" id="ratesLink" placeholder="Paste Google Sheet link here" style="width: 100%; padding: 0.875rem; border: 1px solid #cbd5e1; border-radius: 8px;" onchange="handleLinkInput('rates')">
+                            <input type="text" id="ratesLink" placeholder="Paste Google Sheet link here" onchange="handleLinkInput('rates')">
                         </div>
                     </div>
+
+                    <!-- Mrek Orders -->
                     <div class="form-group">
                         <label>📦 Mrek Orders</label>
                         <div class="input-toggle">
@@ -449,11 +456,31 @@
                             <input type="file" id="ordersFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('orders')" />
                         </div>
                         <div class="input-option active" id="orders-link">
-                            <input type="text" id="ordersLink" placeholder="Paste Google Sheet link here" style="width: 100%; padding: 0.875rem; border: 1px solid #cbd5e1; border-radius: 8px;" onchange="handleLinkInput('orders')">
+                            <input type="text" id="ordersLink" placeholder="Paste Google Sheet link here" onchange="handleLinkInput('orders')">
                         </div>
                     </div>
                 </div>
+
+                <!-- Remote Reference -->
+                <div class="form-group">
+                    <label>📍 Remote Address Reference (Optional)</label>
+                    <div class="input-toggle">
+                        <button class="toggle-btn" onclick="toggleInputType('remote', 'upload')">Upload File</button>
+                        <button class="toggle-btn active" onclick="toggleInputType('remote', 'link')">Google Sheet Link</button>
+                    </div>
+                    <div class="input-option" id="remote-upload">
+                        <div class="file-upload" id="remoteUpload" onclick="document.getElementById('remoteFile').click()">
+                            <span id="remoteLabel">📄 Click to upload Remote ZIP list</span>
+                        </div>
+                        <input type="file" id="remoteFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('remote')" />
+                    </div>
+                    <div class="input-option active" id="remote-link">
+                        <input type="text" id="remoteLink" placeholder="Paste Google Sheet link here" onchange="handleLinkInput('remote')">
+                    </div>
+                </div>
+
                 <div id="errorBox" class="error-box hidden"></div>
+
                 <div id="progressContainer" class="progress-container hidden">
                     <div class="progress-header">
                         <div class="progress-text" id="progressText">Initializing...</div>
@@ -465,6 +492,7 @@
                     <div class="progress-status" id="progressStatus">Preparing...</div>
                     <div class="status-log" id="statusLog"></div>
                 </div>
+
                 <div class="form-group-inline">
                     <div class="form-group" style="margin: 0;">
                         <label>Exchange Rate (CNY to USD)</label>
@@ -473,11 +501,16 @@
                     <button id="analyzeBtn" onclick="analyzeOrders()">📊 Analyze All Orders</button>
                 </div>
             </div>
+
             <div id="resultsContainer" class="hidden"></div>
         </div>
+
         <script>
-            let ratesData = null, ordersData = null;
-            
+            // GLOBAL STATE
+            let ratesData = null, ordersData = null, remoteRefData = null;
+            let remoteRules = [];
+            let resultsData = null;
+
             function handleFileSelect(type) {
                 const input = document.getElementById(type + "File");
                 const file = input.files[0];
@@ -492,10 +525,14 @@
                         ratesData = jsonData;
                         document.getElementById("ratesUpload").classList.add("has-file");
                         document.getElementById("ratesLabel").innerHTML = `<span class="file-name">${file.name} (${jsonData.length} rows)</span>`;
-                    } else {
+                    } else if (type === "orders") {
                         ordersData = jsonData;
                         document.getElementById("ordersUpload").classList.add("has-file");
                         document.getElementById("ordersLabel").innerHTML = `<span class="file-name">${file.name} (${jsonData.length} rows)</span>`;
+                    } else if (type === "remote") {
+                        remoteRefData = jsonData;
+                        document.getElementById("remoteUpload").classList.add("has-file");
+                        document.getElementById("remoteLabel").innerHTML = `<span class="file-name">${file.name} (${jsonData.length} rows)</span>`;
                     }
                 };
                 reader.readAsArrayBuffer(file);
@@ -503,14 +540,12 @@
             }
 
             function toggleInputType(type, inputType) {
-                // Toggle buttons - find all toggle buttons for this type
                 const uploadOption = document.getElementById(`${type}-upload`);
                 const linkOption = document.getElementById(`${type}-link`);
                 const buttonsContainer = uploadOption.parentElement.querySelector('.input-toggle');
                 const buttons = buttonsContainer.querySelectorAll('.toggle-btn');
 
                 buttons.forEach(btn => btn.classList.remove('active'));
-                // Add active class to the clicked button
                 buttons.forEach(btn => {
                     if ((inputType === 'upload' && btn.textContent.includes('Upload')) ||
                         (inputType === 'link' && btn.textContent.includes('Link'))) {
@@ -518,7 +553,6 @@
                     }
                 });
 
-                // Toggle input options
                 uploadOption.classList.remove('active');
                 linkOption.classList.remove('active');
                 document.getElementById(`${type}-${inputType}`).classList.add('active');
@@ -529,7 +563,6 @@
                 if (!link) return;
 
                 try {
-                    // Extract sheet ID from Google Sheets URL
                     const match = link.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
                     if (!match) {
                         showError("Invalid Google Sheets URL");
@@ -549,10 +582,14 @@
                     if (type === "rates") {
                         ratesData = jsonData;
                         document.getElementById("ratesLabel").innerHTML = `<span class="file-name">✅ Loaded from Google Sheets (${jsonData.length} rows)</span>`;
-                    } else {
+                    } else if (type === "orders") {
                         ordersData = jsonData;
                         document.getElementById("ordersLabel").innerHTML = `<span class="file-name">✅ Loaded from Google Sheets (${jsonData.length} rows)</span>`;
+                    } else if (type === "remote") {
+                        remoteRefData = jsonData;
+                        document.getElementById("remoteLabel").innerHTML = `<span class="file-name">✅ Loaded from Google Sheets (${jsonData.length} rows)</span>`;
                     }
+
                     saveToURL();
                 } catch (error) {
                     showError("Failed to load Google Sheet. Make sure it's publicly accessible.");
@@ -581,7 +618,7 @@
                 document.getElementById("progressText").textContent = text;
                 if (status) document.getElementById("progressStatus").textContent = status;
             }
-            
+
             function addStatusLog(message, type = "info") {
                 const log = document.getElementById("statusLog");
                 const line = document.createElement("div");
@@ -590,12 +627,12 @@
                 log.appendChild(line);
                 log.scrollTop = log.scrollHeight;
             }
-            
+
             function showError(message) {
                 document.getElementById("errorBox").textContent = message;
                 document.getElementById("errorBox").classList.remove("hidden");
             }
-            
+
             async function callOpenAI(prompt) {
                 const response = await fetch("/api/openai", {
                     method: "POST",
@@ -618,14 +655,14 @@
                 if (!data.choices?.[0]?.message?.content) throw new Error("Invalid API response");
                 return data.choices[0].message.content;
             }
-            
+
             function extractJSON(text) {
                 let cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
                 const match = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
                 if (match) cleaned = match[0];
                 return JSON.parse(cleaned);
             }
-            
+
             function parseWeightRange(rangeStr) {
                 if (!rangeStr || typeof rangeStr !== 'string') return null;
                 const match = rangeStr.match(/([\d.]+)[＜<].*?[≤<=]([\d.]+)/);
@@ -635,7 +672,7 @@
                     maxWeight: parseFloat(match[2])
                 };
             }
-            
+
             function containsChinese(text) {
                 return /[\u4e00-\u9fa5]/.test(text);
             }
@@ -648,7 +685,7 @@
                     return response.trim().replace(/["""]/g, '');
                 } catch (error) {
                     console.error('Translation error:', error);
-                    return text; // Return original if translation fails
+                    return text;
                 }
             }
 
@@ -662,34 +699,80 @@
                 const oEn = normalizeShippingLine(orderLineEn);
                 const rEn = normalizeShippingLine(rateLineEn);
 
-                // Try exact and partial matches with original and translated text
                 return o.includes(r) || r.includes(o) ||
-                       (oEn && rEn && (oEn.includes(rEn) || rEn.includes(oEn))) ||
-                       (oEn && (oEn.includes(r) || r.includes(oEn))) ||
-                       (rEn && (o.includes(rEn) || rEn.includes(o)));
+                    (oEn && rEn && (oEn.includes(rEn) || rEn.includes(oEn))) ||
+                    (oEn && (oEn.includes(r) || r.includes(oEn))) ||
+                    (rEn && (o.includes(rEn) || rEn.includes(o)));
             }
-            
+
+            function parseRemoteRef(remoteData) {
+                remoteRules = [];
+                if (!remoteData) return;
+
+                for (let i = 1; i < remoteData.length; i++) {
+                    const row = remoteData[i];
+                    if (!row) continue;
+
+                    const carrier = (row[0] || '').toString().trim().toLowerCase();
+                    const country = (row[1] || '').toString().trim().toUpperCase();
+                    const state   = (row[2] || '').toString().trim().toUpperCase() || null;
+                    const zipStart = row[3] !== undefined && row[3] !== '' ? String(row[3]).padStart(5, '0') : null;
+                    const zipEnd   = row[4] !== undefined && row[4] !== '' ? String(row[4]).padStart(5, '0') : null;
+
+                    if (!country && !zipStart && !zipEnd) continue;
+
+                    remoteRules.push({ carrier, country, state, zipStart, zipEnd });
+                }
+            }
+
+            function inferCarrierKey(shippingLine) {
+                const lower = (shippingLine || '').toLowerCase();
+                if (lower.includes('yuntu') || lower.includes('yunexpress') || lower.includes('云途')) return 'yuntu';
+                if (lower.includes('yanwen') || lower.includes('燕文')) return 'yanwen';
+                return '';
+            }
+
+            function isRemoteAddress(order) {
+                if (!remoteRules.length) return false;
+                const country = (order.country || '').toUpperCase();
+                const state   = (order.state || '').toUpperCase();
+                const zip     = (order.postCode || '').toString().padStart(5, '0');
+                const carrierKey = inferCarrierKey(order.shippingLine);
+
+                return remoteRules.some(rule => {
+                    if (rule.carrier && carrierKey && !carrierKey.includes(rule.carrier)) return false;
+                    if (rule.country && rule.country !== country) return false;
+                    if (rule.state && rule.state !== state) return false;
+                    if (rule.zipStart && rule.zipEnd && zip >= rule.zipStart && zip <= rule.zipEnd) return true;
+                    return false;
+                });
+            }
+
             async function analyzeOrders() {
                 document.getElementById("analyzeBtn").disabled = true;
                 document.getElementById("errorBox").classList.add("hidden");
                 document.getElementById("statusLog").innerHTML = "";
                 document.getElementById("resultsContainer").innerHTML = "";
                 document.getElementById("resultsContainer").classList.add("hidden");
-                
+
                 try {
                     if (!ratesData || !ordersData) throw new Error("Upload both files");
                     const exchangeRate = parseFloat(document.getElementById("exchangeRate").value);
                     if (isNaN(exchangeRate) || exchangeRate <= 0) throw new Error("Invalid exchange rate");
-                    
-                    // Step 1: Parse rate sheet with JavaScript (FAST!)
-                    updateProgress(5, "⚡ Parsing Rate Sheet", "Using JavaScript - instant!");
+
+                    if (remoteRefData) {
+                        parseRemoteRef(remoteRefData);
+                        addStatusLog(`Loaded ${remoteRules.length} remote rules`, "success");
+                    } else {
+                        addStatusLog("No remote reference file loaded – remote address checks limited.", "info");
+                    }
+
+                    updateProgress(5, "⚡ Parsing Rate Sheet", "Using JavaScript...");
                     addStatusLog(`Rate sheet: ${ratesData.length} rows, Orders: ${ordersData.length} rows`);
-                    addStatusLog("⚡ Parsing rate sheet with pure JavaScript...");
-                    
+
                     let shippingLineName = ratesData[1][0] ? String(ratesData[1][0]).trim() : "";
                     addStatusLog(`Found shipping line: ${shippingLineName}`);
 
-                    // Translate shipping line name if it contains Chinese
                     let shippingLineNameEn = shippingLineName;
                     if (containsChinese(shippingLineName)) {
                         updateProgress(10, "🌐 Translating Chinese", "Translating shipping carrier name...");
@@ -697,26 +780,26 @@
                         shippingLineNameEn = await translateChinese(shippingLineName);
                         addStatusLog(`Translation: "${shippingLineName}" → "${shippingLineNameEn}"`, "success");
                     }
-                    
+
                     const ratesByCountry = {};
-                    const countryMapping = {}; // Maps normalized -> original
+                    const countryMapping = {};
                     let currentCountry = null;
-                    
+
                     for (let i = 2; i < ratesData.length; i++) {
                         const row = ratesData[i];
-                        if (!row || row.length < 6) continue;
-                        
+                        if (!row || row.length < 7) continue;
+
                         if (row[0] && typeof row[0] === 'string' && row[0].trim()) {
                             currentCountry = row[0].trim();
                             const normalized = currentCountry.toUpperCase();
                             ratesByCountry[normalized] = [];
                             countryMapping[normalized] = currentCountry;
                         }
-                        
-                        const weightRange = row[2];
-                        const costPerKg = row[5];
-                        const regFee = row[6];
-                        
+
+                        const weightRange = row[3]; // Weight (KG)
+                        const costPerKg   = row[6]; // Shipping Cost (RMB/KG)
+                        const regFee      = row[7]; // Registration Fee (RMB/shipment)
+
                         if (currentCountry && weightRange && costPerKg) {
                             const weights = parseWeightRange(weightRange);
                             if (weights) {
@@ -726,73 +809,98 @@
                                     maxWeight: weights.maxWeight,
                                     costPerKg: parseFloat(costPerKg),
                                     regFee: parseFloat(regFee) || 0,
+                                    type: 'yuntu',
                                     details: `${weights.minWeight}-${weights.maxWeight}kg @ ¥${costPerKg}/kg + ¥${regFee || 0} reg`
                                 });
                             }
                         }
                     }
-                    
+
                     const totalCountries = Object.keys(ratesByCountry).length;
                     const totalBrackets = Object.values(ratesByCountry).reduce((s, b) => s + b.length, 0);
-                    
+
                     updateProgress(20, "✅ Rate Sheet Parsed", `${totalCountries} countries, ${totalBrackets} brackets`);
                     addStatusLog(`✅ Parsed ${totalCountries} countries with ${totalBrackets} rate brackets`, "success");
-                    
-                    // Log found countries for debugging
-                    const countries = Object.keys(countryMapping).map(k => countryMapping[k]).join(", ");
-                    addStatusLog(`Countries: ${countries}`);
-                    
-                    if (totalBrackets === 0) {
-                        throw new Error("No rate brackets found in rate sheet");
-                    }
-                    
-                    // Step 2: Use AI only for column detection (FAST!)
+                    if (totalBrackets === 0) throw new Error("No rate brackets found in rate sheet");
+
                     updateProgress(25, "🤖 AI Detecting Columns", "One quick AI call...");
                     addStatusLog("🤖 Using AI to detect order columns...");
-                    
+
                     const orderSample = ordersData.slice(0, 3).map(r => r.join("|")).join("\n");
                     const colPrompt = `Identify column indices (0-based) in this data:
 ${orderSample}
 
-Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"usdCostCol":4,"shippingLineCol":5}`;
-                    
+Return ONLY JSON with these keys (use -1 if not present):
+{
+  "orderIdCol":0,
+  "countryCol":1,
+  "weightCol":2,
+  "cnyCostCol":3,
+  "usdCostCol":4,
+  "shippingLineCol":5,
+  "stateCol":6,
+  "postCodeCol":7,
+  "handlingUsdCol":8,
+  "handlingCnyCol":9,
+  "remoteUsdCol":10,
+  "remoteCnyCol":11
+}`;
+
                     const colResponse = await callOpenAI(colPrompt);
                     const colMap = extractJSON(colResponse);
-                    
+
                     updateProgress(40, "✅ Columns Detected", "AI analysis complete");
                     addStatusLog(`✅ Detected: Order=${colMap.orderIdCol}, Country=${colMap.countryCol}, Weight=${colMap.weightCol}`, "success");
-                    
-                    // Step 3: Parse all orders with JavaScript (FAST!)
+
                     updateProgress(45, "📊 Parsing Orders", "Extracting all order data...");
                     addStatusLog("📊 Parsing orders with JavaScript...");
-                    
+
                     const allOrders = [];
                     for (let i = 1; i < ordersData.length; i++) {
                         const row = ordersData[i];
-                        if (!row || !row[colMap.orderIdCol]) continue;
-                        
+                        if (!row || row[colMap.orderIdCol] === undefined || row[colMap.orderIdCol] === "") continue;
+
+                        const getVal = (idx) => (idx !== undefined && idx !== null && idx >= 0) ? row[idx] : "";
+
+                        const orderId       = String(getVal(colMap.orderIdCol) || "").trim();
+                        const country       = String(getVal(colMap.countryCol) || "").trim();
+                        const totalWeight   = parseFloat(getVal(colMap.weightCol)) || 0;
+                        const chargedCNY    = parseFloat(getVal(colMap.cnyCostCol)) || 0;
+                        const chargedUSD    = parseFloat(getVal(colMap.usdCostCol)) || 0;
+                        const shippingLine  = String(getVal(colMap.shippingLineCol) || "").trim();
+                        const state         = String(getVal(colMap.stateCol) || "").trim();
+                        const postCode      = String(getVal(colMap.postCodeCol) || "").trim();
+
+                        const handlingUSD   = parseFloat(getVal(colMap.handlingUsdCol)) || 0;
+                        const handlingCNY   = parseFloat(getVal(colMap.handlingCnyCol)) || 0;
+                        const remoteUSD     = parseFloat(getVal(colMap.remoteUsdCol)) || 0;
+                        const remoteCNY     = parseFloat(getVal(colMap.remoteCnyCol)) || 0;
+
                         allOrders.push({
-                            orderId: String(row[colMap.orderIdCol] || "").trim(),
-                            country: String(row[colMap.countryCol] || "").trim(),
-                            totalWeight: parseFloat(row[colMap.weightCol]) || 0,
-                            chargedCNY: parseFloat(row[colMap.cnyCostCol]) || 0,
-                            chargedUSD: parseFloat(row[colMap.usdCostCol]) || 0,
-                            shippingLine: String(row[colMap.shippingLineCol] || "").trim(),
+                            orderId,
+                            country,
+                            totalWeight,
+                            chargedCNY,
+                            chargedUSD,
+                            shippingLine,
+                            state,
+                            postCode,
+                            handlingUSD,
+                            handlingCNY,
+                            remoteUSD,
+                            remoteCNY
                         });
                     }
-                    
+
                     updateProgress(50, "✅ Orders Parsed", `${allOrders.length} orders ready`);
                     addStatusLog(`✅ Parsed ${allOrders.length} valid orders from ${ordersData.length} rows`, "success");
-                    
-                    // Step 4: Match orders to rates (FAST!)
-                    updateProgress(55, "⚡ Matching Orders", "Processing at high speed...");
-                    addStatusLog("⚡ Matching orders to rates (JavaScript - blazing fast)...");
-                    
-                    const results = { overcharge: [], undercharge: [], accurate: [], invalid: [], missingCarriers: [] };
+
+                    updateProgress(55, "⚡ Matching Orders", "Processing...");
+                    addStatusLog("⚡ Matching orders to rates...");
+
+                    const results = { overcharge: [], undercharge: [], accurate: [], invalid: [], missingCarriers: [], remoteOrders: [] };
                     const total = allOrders.length;
-                    const missingCarrierMap = new Map(); // Track unique missing carriers
-                    
-                    // Cache for translated order shipping lines to avoid repeated translations
+                    const missingCarrierMap = new Map();
                     const translationCache = new Map();
 
                     for (let i = 0; i < total; i++) {
@@ -803,7 +911,6 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             updateProgress(percent, "⚡ Processing", `${i}/${total} orders (${Math.round(i/total*100)}%)`);
                         }
 
-                        // Translate order shipping line if it contains Chinese (with caching)
                         let orderShippingLineEn = order.shippingLine;
                         if (containsChinese(order.shippingLine)) {
                             if (translationCache.has(order.shippingLine)) {
@@ -816,28 +923,27 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                         }
 
                         if (!matchShippingLine(order.shippingLine, shippingLineName, orderShippingLineEn, shippingLineNameEn)) {
-                            // Track this as a missing carrier
-                            const carrierKey = containsChinese(order.shippingLine) ?
-                                `${order.shippingLine} (${orderShippingLineEn})` :
-                                order.shippingLine;
+                            const carrierKey = containsChinese(order.shippingLine)
+                                ? `${order.shippingLine} (${orderShippingLineEn})`
+                                : order.shippingLine;
 
                             if (!missingCarrierMap.has(carrierKey)) {
                                 missingCarrierMap.set(carrierKey, []);
                             }
                             missingCarrierMap.get(carrierKey).push(order.orderId);
 
-                            const rateCarrierDisplay = containsChinese(shippingLineName) ?
-                                `${shippingLineName} (${shippingLineNameEn})` :
-                                shippingLineName;
+                            const rateCarrierDisplay = containsChinese(shippingLineName)
+                                ? `${shippingLineName} (${shippingLineNameEn})`
+                                : shippingLineName;
 
                             results.invalid.push({
                                 ...order,
                                 reason: `Shipping carrier/method mismatch`,
-                                details: `Order uses shipping carrier "${carrierKey}" which doesn't match the rate sheet carrier "${rateCarrierDisplay}". This carrier may not be available in the current rate sheet.`,
+                                details: `Order uses shipping carrier "${carrierKey}" which doesn't match the rate sheet carrier "${rateCarrierDisplay}".`,
                                 expectedCNY: "N/A",
                                 expectedUSD: "N/A",
                                 difference: "N/A",
-                                bracket: "N/A",
+                                bracket: "N/A"
                             });
                             continue;
                         }
@@ -845,14 +951,13 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                         const normalizedCountry = order.country.toUpperCase();
                         const countryRates = ratesByCountry[normalizedCountry];
                         if (!countryRates || countryRates.length === 0) {
-                            // More specific error for blank country vs country not in rate sheet
                             let errorReason, errorDetails;
                             if (!order.country || order.country.trim() === "") {
                                 errorReason = "Missing country information";
-                                errorDetails = "No country has been specified for this order. Please add the destination country to calculate shipping rates.";
+                                errorDetails = "No country specified for this order.";
                             } else {
                                 errorReason = `Country "${order.country}" not found in rate sheet`;
-                                errorDetails = `The destination country "${order.country}" does not have shipping rates in the current rate sheet. Please request rates for this country from Mrek.`;
+                                errorDetails = `Destination "${order.country}" has no rates in this sheet.`;
                             }
                             results.invalid.push({
                                 ...order,
@@ -861,31 +966,44 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                                 expectedCNY: "N/A",
                                 expectedUSD: "N/A",
                                 difference: "N/A",
-                                bracket: "N/A",
+                                bracket: "N/A"
                             });
                             continue;
                         }
-                        
+
                         const bracket = countryRates.find(b => order.totalWeight > b.minWeight && order.totalWeight <= b.maxWeight);
                         if (!bracket) {
-                            // Find the available weight ranges for this country
                             const availableRanges = countryRates.map(b => `${b.minWeight}-${b.maxWeight}kg`).join(', ');
                             results.invalid.push({
                                 ...order,
                                 reason: `Weight ${order.totalWeight}kg out of range for ${order.country}`,
-                                details: `No shipping rate found for weight ${order.totalWeight}kg to ${order.country}. Available weight ranges: ${availableRanges}. The order weight may be too light or too heavy for the available brackets.`,
+                                details: `No rate for weight ${order.totalWeight}kg. Ranges: ${availableRanges}`,
                                 expectedCNY: "N/A",
                                 expectedUSD: "N/A",
                                 difference: "N/A",
-                                bracket: "N/A",
+                                bracket: "N/A"
                             });
                             continue;
                         }
-                        
+
                         const expectedCNY = (order.totalWeight * bracket.costPerKg) + bracket.regFee;
                         const expectedUSD = expectedCNY / exchangeRate;
                         const difference = order.chargedUSD - expectedUSD;
-                        
+
+                        const addressIsRemote = isRemoteAddress(order);
+                        const remoteChargeUSD = order.remoteUSD || (order.remoteCNY ? (order.remoteCNY / exchangeRate) : 0);
+                        const handlingUSD = order.handlingUSD || (order.handlingCNY ? (order.handlingCNY / exchangeRate) : 0);
+                        const totalChargedUSD = order.chargedUSD + handlingUSD + remoteChargeUSD;
+
+                        let remoteStatus = "Not remote";
+                        if (addressIsRemote && remoteChargeUSD > 0) {
+                            remoteStatus = "✅ Remote address & surcharge charged";
+                        } else if (addressIsRemote && remoteChargeUSD === 0) {
+                            remoteStatus = "⚠ Remote address but NO surcharge charged";
+                        } else if (!addressIsRemote && remoteChargeUSD > 0) {
+                            remoteStatus = "❌ Surcharge charged but address not remote";
+                        }
+
                         const processed = {
                             ...order,
                             expectedCNY: expectedCNY.toFixed(2),
@@ -893,14 +1011,22 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             difference: difference.toFixed(2),
                             exchangeRate: exchangeRate,
                             bracket: bracket.details,
+                            addressIsRemote,
+                            remoteChargeUSD: remoteChargeUSD.toFixed(2),
+                            handlingUSD: handlingUSD.toFixed(2),
+                            totalChargedUSD: totalChargedUSD.toFixed(2),
+                            remoteStatus
                         };
-                        
+
+                        if (addressIsRemote || remoteChargeUSD > 0) {
+                            results.remoteOrders.push(processed);
+                        }
+
                         if (Math.abs(difference) < 0.01) results.accurate.push(processed);
                         else if (difference > 0) results.overcharge.push(processed);
                         else results.undercharge.push(processed);
                     }
-                    
-                    // Convert missing carriers map to array
+
                     results.missingCarriers = Array.from(missingCarrierMap.entries()).map(([carrier, orderIds]) => ({
                         carrier: carrier,
                         orderCount: orderIds.length,
@@ -908,20 +1034,20 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                     }));
 
                     updateProgress(100, "✅ Complete!", "All orders processed");
-                    addStatusLog(`✅ DONE! Analysis complete`, "success");
-                    addStatusLog(`📈 Overcharged: ${results.overcharge.length} orders`, results.overcharge.length > 0 ? "error" : "success");
-                    addStatusLog(`📉 Undercharged: ${results.undercharge.length} orders`, results.undercharge.length > 0 ? "error" : "success");
+                    addStatusLog(`✅ DONE!`, "success");
+                    addStatusLog(`📈 Overcharged: ${results.overcharge.length} orders`, results.overcharge.length ? "error" : "success");
+                    addStatusLog(`📉 Undercharged: ${results.undercharge.length} orders`, results.undercharge.length ? "error" : "success");
                     addStatusLog(`✓ Accurate: ${results.accurate.length} orders`, "success");
-                    addStatusLog(`⚠ Invalid: ${results.invalid.length} orders`, results.invalid.length > 0 ? "error" : "success");
-                    if (results.missingCarriers.length > 0) {
-                        addStatusLog(`📦 Missing Carriers: ${results.missingCarriers.length} different carriers not found`, "error");
-                    }
-                    
+                    addStatusLog(`⚠ Invalid: ${results.invalid.length} orders`, results.invalid.length ? "error" : "success");
+                    addStatusLog(`📍 Remote-related orders: ${results.remoteOrders.length}`, "info");
+
+                    resultsData = results;
+
                     setTimeout(() => {
                         document.getElementById("progressContainer").classList.add("hidden");
                         displayResults(results);
                     }, 1000);
-                    
+
                 } catch (error) {
                     showError(error.message);
                     addStatusLog(`❌ Error: ${error.message}`, "error");
@@ -930,57 +1056,139 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                     document.getElementById("analyzeBtn").disabled = false;
                 }
             }
-            
+
+            function generateOrderTable(orders, type) {
+                if (orders.length === 0) {
+                    return `<p style="color: #94a3b8; text-align: center; padding: 2rem;">No ${type} orders</p>`;
+                }
+
+                const isInvalid = type === 'invalid';
+
+                return `
+                    <div class="table-container">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                            <thead>
+                                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Order #</th>
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Country</th>
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">State/ZIP</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Weight (kg)</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Ship (USD)</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Handling (USD)</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Remote (USD)</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Total (USD)</th>
+                                    ${!isInvalid ? `
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Expected (USD)</th>
+                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Difference</th>
+                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Bracket</th>
+                                    ` : `
+                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Shipping Carrier</th>
+                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Issue</th>
+                                    `}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${orders.map((order, idx) => `
+                                    <tr style="border-bottom: 1px solid #e5e7eb; ${idx % 2 === 0 ? 'background: #f9fafb;' : ''}">
+                                        <td style="padding: 0.75rem; font-weight: 500; color: #7c3aed;">${order.orderId}</td>
+                                        <td style="padding: 0.75rem; color: #6b7280;">${order.country}</td>
+                                        <td style="padding: 0.75rem; color: #6b7280; font-size: 0.8rem;">${order.state || ''} ${order.postCode || ''}</td>
+                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">${order.totalWeight}</td>
+                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.chargedUSD.toFixed ? order.chargedUSD.toFixed(2) : order.chargedUSD}</td>
+                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.handlingUSD || '0.00'}</td>
+                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.remoteChargeUSD || '0.00'}</td>
+                                        <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #111827;">$${order.totalChargedUSD || (order.chargedUSD || 0).toFixed?.(2) || order.chargedUSD}</td>
+                                        ${!isInvalid ? `
+                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.expectedUSD}</td>
+                                            <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${parseFloat(order.difference) > 0 ? '#dc2626' : '#059669'};">
+                                                ${parseFloat(order.difference) > 0 ? '+' : ''}$${order.difference}
+                                            </td>
+                                            <td style="padding: 0.75rem; color: #6b7280; font-size: 0.75rem;">${order.bracket}</td>
+                                        ` : `
+                                            <td style="padding: 0.75rem; color: #6b7280; font-size: 0.875rem;">${order.shippingLine}</td>
+                                            <td style="padding: 0.75rem; color: #dc2626; font-size: 0.875rem; font-weight: 600;">${order.reason}</td>
+                                        `}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            function generateRemoteTable(remoteOrders) {
+                if (!remoteOrders.length) {
+                    return `<p style="color: #94a3b8; text-align: center; padding: 1.5rem;">No remote-related orders found.</p>`;
+                }
+
+                return `
+                    <div class="table-container">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                            <thead>
+                                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Order #</th>
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Country</th>
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">State / ZIP</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Ship (USD)</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Handling (USD)</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Remote (USD)</th>
+                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Total (USD)</th>
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Remote Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${remoteOrders.map((o, idx) => `
+                                    <tr style="border-bottom: 1px solid #e5e7eb; ${idx % 2 === 0 ? 'background: #f9fafb;' : ''}">
+                                        <td style="padding: 0.75rem; font-weight: 500; color: #7c3aed;">${o.orderId}</td>
+                                        <td style="padding: 0.75rem; color: #6b7280;">${o.country}</td>
+                                        <td style="padding: 0.75rem; color: #6b7280; font-size: 0.8rem;">${o.state || ''} ${o.postCode || ''}</td>
+                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${o.chargedUSD.toFixed ? o.chargedUSD.toFixed(2) : o.chargedUSD}</td>
+                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${o.handlingUSD}</td>
+                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${o.remoteChargeUSD}</td>
+                                        <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #111827;">$${o.totalChargedUSD}</td>
+                                        <td style="padding: 0.75rem; color:
+                                            ${o.remoteStatus.startsWith('✅') ? '#059669'
+                                            : o.remoteStatus.startsWith('⚠') ? '#d97706'
+                                            : o.remoteStatus.startsWith('❌') ? '#dc2626'
+                                            : '#6b7280'};">
+                                            ${o.remoteStatus}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
             function displayResults(results) {
                 const container = document.getElementById("resultsContainer");
                 container.classList.remove("hidden");
-                
+
                 const overchargeTotal = results.overcharge.reduce((s, o) => s + parseFloat(o.difference), 0);
                 const underchargeTotal = Math.abs(results.undercharge.reduce((s, o) => s + parseFloat(o.difference), 0));
-                
-                // Calculate overall accuracy
+
                 const totalOrders = results.overcharge.length + results.undercharge.length + results.accurate.length + results.invalid.length;
                 const accurateOrders = results.accurate.length;
                 const accuracyPercentage = totalOrders > 0 ? ((accurateOrders / totalOrders) * 100).toFixed(1) : 0;
-                
-                // Top 10 overcharged orders
+
+                const remoteMismatchCount = results.remoteOrders.filter(o =>
+                    o.remoteStatus !== "✅ Remote address & surcharge charged"
+                ).length;
+
                 const top10Overcharged = [...results.overcharge]
                     .sort((a, b) => parseFloat(b.difference) - parseFloat(a.difference))
                     .slice(0, 10);
-                
-                // Country breakdown for overcharges
-                const countryCounts = {};
-                results.overcharge.forEach(o => {
-                    countryCounts[o.country] = (countryCounts[o.country] || 0) + 1;
-                });
-                const topCountries = Object.entries(countryCounts)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 5);
-                
-                // Invalid reasons breakdown with examples
-                const invalidByReason = {};
-                results.invalid.forEach(o => {
-                    const reason = o.reason;
-                    if (!invalidByReason[reason]) {
-                        invalidByReason[reason] = [];
-                    }
-                    if (invalidByReason[reason].length < 3) { // Keep up to 3 examples per reason
-                        invalidByReason[reason].push(o);
-                    }
-                });
-                
-                window.resultsData = results;
-                
-                // Add share button at the top
+
+                resultsData = results;
+
                 container.innerHTML = `
-                    <!-- Share Dashboard Button -->
                     <div style="margin-bottom: 1.5rem; display: flex; justify-content: flex-end;">
                         <button onclick="shareDashboard(event)" style="background: #2d3748; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
                             🔗 Share Dashboard Link
                         </button>
                     </div>
 
-                    <!-- Summary Cards -->
                     <div class="results-grid" style="margin-bottom: 2rem;">
                         <div class="result-card">
                             <div class="result-header">
@@ -989,9 +1197,7 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Overcharged</h3>
                             <div class="result-amount" style="color: #dc2626;">$${overchargeTotal.toFixed(2)}</div>
                             <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">${results.overcharge.length} orders</div>
-                            <button class="download-btn" onclick="downloadExcel('overcharge')">
-                                📥 Download Excel
-                            </button>
+                            <button class="download-btn" onclick="downloadExcel('overcharge')">📥 Download Excel</button>
                         </div>
                         <div class="result-card">
                             <div class="result-header">
@@ -1000,9 +1206,7 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Undercharged</h3>
                             <div class="result-amount" style="color: #059669;">$${underchargeTotal.toFixed(2)}</div>
                             <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">${results.undercharge.length} orders</div>
-                            <button class="download-btn" onclick="downloadExcel('undercharge')">
-                                📥 Download Excel
-                            </button>
+                            <button class="download-btn" onclick="downloadExcel('undercharge')">📥 Download Excel</button>
                         </div>
                         <div class="result-card">
                             <div class="result-header">
@@ -1011,28 +1215,46 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             <h3>Accurate</h3>
                             <div class="result-amount" style="color: #d97706;">${results.accurate.length}</div>
                             <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">orders correctly charged</div>
-                            <button class="download-btn" onclick="downloadExcel('accurate')">
-                                📥 Download Excel
-                            </button>
+                            <button class="download-btn" onclick="downloadExcel('accurate')">📥 Download Excel</button>
                         </div>
                         <div class="result-card">
                             <div class="result-header">
-                                <div class="result-icon" style="background: #f3f4f6; color: #6b7280;">⚠</div>
+                                <div class="result-icon" style="background: #e0f2fe; color: #0369a1;">📍</div>
                             </div>
-                            <h3>Invalid</h3>
-                            <div class="result-amount" style="color: #6b7280;">${results.invalid.length}</div>
-                            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">orders with issues</div>
-                            <button class="download-btn" onclick="downloadExcel('invalid')">
-                                📥 Download Excel
-                            </button>
+                            <h3>Remote-Related Orders</h3>
+                            <div class="result-amount" style="color: #0369a1;">${results.remoteOrders.length}</div>
+                            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                                ${remoteMismatchCount === 0
+                                    ? "All remote surcharges match remote addresses."
+                                    : `${remoteMismatchCount} with mismatch between address & surcharge.`}
+                            </div>
+                            <button class="download-btn" onclick="downloadExcel('remoteOrders')">📥 Download Remote Orders</button>
                         </div>
                     </div>
 
-                    <!-- All Orders Detailed View - AFTER RESULT-GRID -->
+                    <div class="card" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="color: #92400e; margin-bottom: 0.5rem;">Overall Accuracy</h2>
+                                <p style="color: #78350f; font-size: 0.875rem;">${accurateOrders} out of ${totalOrders} orders were correctly charged</p>
+                            </div>
+                            <div style="font-size: 3rem; font-weight: 800; color: #d97706;">${accuracyPercentage}%</div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 2rem;">
+                        <h2 style="color: #1f2937; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.5rem;">📍</span> Remote Address & Surcharge Audit
+                        </h2>
+                        <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 1rem;">
+                            This table shows all orders where either the address is remote <strong>or</strong> a remote surcharge was charged.
+                            You can quickly see if surcharge logic matches the actual address.
+                        </p>
+                        ${generateRemoteTable(results.remoteOrders)}
+                    </div>
+
                     <div class="card" style="margin-bottom: 2rem;">
                         <h2 style="color: #1e293b; margin-bottom: 1.5rem;">📊 All Orders - Detailed View</h2>
-
-                        <!-- Tab Navigation with new button styles -->
                         <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
                             <button onclick="switchTab('overcharge')" id="tab-overcharge" class="tab-btn active">
                                 Overcharged (${results.overcharge.length})
@@ -1047,8 +1269,6 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                                 Invalid (${results.invalid.length})
                             </button>
                         </div>
-
-                        <!-- Tab Content -->
                         <div class="tab-content" id="content-overcharge" style="display: block;">
                             ${generateOrderTable(results.overcharge, 'overcharge')}
                         </div>
@@ -1062,389 +1282,75 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                             ${generateOrderTable(results.invalid, 'invalid')}
                         </div>
                     </div>
-
-                    <!-- Overall Accuracy Card -->
-                    <div class="card" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; margin-bottom: 2rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <h2 style="color: #92400e; margin-bottom: 0.5rem;">Overall Accuracy</h2>
-                                <p style="color: #78350f; font-size: 0.875rem;">${accurateOrders} out of ${totalOrders} orders were correctly charged</p>
-                            </div>
-                            <div style="font-size: 3rem; font-weight: 800; color: #d97706;">${accuracyPercentage}%</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Top 10 Overcharged Orders -->
-                    ${top10Overcharged.length > 0 ? `
-                    <div class="card" style="margin-bottom: 2rem;">
-                        <h2 style="color: #1f2937; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="font-size: 1.5rem;">🔥</span> Top 10 Overcharged Orders
-                        </h2>
-                        <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
-                                <thead>
-                                    <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
-                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Order #</th>
-                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Country</th>
-                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Weight (kg)</th>
-                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Charged (USD)</th>
-                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Charged (CNY)</th>
-                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Expected (USD)</th>
-                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Expected (CNY)</th>
-                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Overcharge</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${top10Overcharged.map((order, idx) => `
-                                        <tr style="border-bottom: 1px solid #e5e7eb; ${idx % 2 === 0 ? 'background: #f9fafb;' : ''}">
-                                            <td style="padding: 0.75rem; font-weight: 500; color: #7c3aed;">${order.orderId}</td>
-                                            <td style="padding: 0.75rem; color: #6b7280;">${order.country}</td>
-                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">${order.totalWeight}</td>
-                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.chargedUSD}</td>
-                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">¥${order.chargedCNY}</td>
-                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.expectedUSD}</td>
-                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">¥${order.expectedCNY}</td>
-                                            <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #dc2626;">+$${order.difference}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    <!-- Country Breakdown -->
-                    ${topCountries.length > 0 ? `
-                    <div class="card" style="margin-bottom: 2rem;">
-                        <h2 style="color: #1f2937; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="font-size: 1.5rem;">🌍</span> Overcharges by Country
-                        </h2>
-                        <div style="display: grid; gap: 0.75rem;">
-                            ${topCountries.map(([country, count]) => {
-                                const countryTotal = results.overcharge
-                                    .filter(o => o.country === country)
-                                    .reduce((sum, o) => sum + parseFloat(o.difference), 0);
-                                return `
-                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f9fafb; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
-                                        <div>
-                                            <div style="font-weight: 600; color: #1f2937;">${country}</div>
-                                            <div style="font-size: 0.875rem; color: #6b7280;">${count} orders overcharged</div>
-                                        </div>
-                                        <div style="text-align: right;">
-                                            <div style="font-weight: 700; font-size: 1.25rem; color: #dc2626;">$${countryTotal.toFixed(2)}</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">total overcharge</div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    <!-- Invalid Orders Accordion (Closed by Default) -->
-                    ${results.invalid.length > 0 ? `
-                    <div class="accordion">
-                        <div class="accordion-header invalid" onclick="toggleAccordion('invalid-orders')">
-                            <div class="accordion-title" style="color: #991b1b;">
-                                <span style="font-size: 1.5rem;">⚠️</span>
-                                <span>Invalid Orders - What Went Wrong (${results.invalid.length} orders)</span>
-                            </div>
-                            <div class="accordion-chevron" id="chevron-invalid-orders">▼</div>
-                        </div>
-                        <div class="accordion-content" id="content-invalid-orders">
-                            <p style="color: #6b7280; margin-bottom: 1.5rem; font-size: 0.95rem;">
-                                ${results.invalid.length} orders couldn't be matched to rates. Here are the specific issues with detailed explanations:
-                            </p>
-                            <div style="display: grid; gap: 1.5rem;">
-                                ${Object.entries(invalidByReason).map(([reason, examples]) => {
-                                    return `
-                                        <div style="background: white; border-radius: 0.75rem; border: 2px solid #fecaca; padding: 1.5rem;">
-                                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                                                <div>
-                                                    <h3 style="color: #991b1b; font-size: 1.1rem; margin-bottom: 0.5rem;">${reason}</h3>
-                                                    ${examples[0].details ? `<p style="color: #6b7280; font-size: 0.875rem; line-height: 1.5;">${examples[0].details}</p>` : ''}
-                                                </div>
-                                                <div style="background: #fecaca; color: #991b1b; padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 600; font-size: 0.875rem;">
-                                                    ${invalidByReason[reason].length}+ orders
-                                                </div>
-                                            </div>
-
-                                            <div style="background: #fef9f5; border-left: 3px solid #f59e0b; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
-                                                <div style="font-weight: 600; color: #92400e; margin-bottom: 0.75rem; font-size: 0.875rem;">📋 Examples from your orders:</div>
-                                                ${examples.map((example, idx) => `
-                                                    <div style="margin-bottom: ${idx < examples.length - 1 ? '0.75rem' : '0'}; padding-bottom: ${idx < examples.length - 1 ? '0.75rem' : '0'}; border-bottom: ${idx < examples.length - 1 ? '1px solid #fde68a' : 'none'};">
-                                                        <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem; font-size: 0.813rem;">
-                                                            <span style="font-weight: 600; color: #92400e;">Order ID:</span>
-                                                            <span style="color: #6b7280;">${example.orderId}</span>
-
-                                                            <span style="font-weight: 600; color: #92400e;">Country:</span>
-                                                            <span style="color: #6b7280;">${example.country || '(blank)'}</span>
-
-                                                            <span style="font-weight: 600; color: #92400e;">Weight:</span>
-                                                            <span style="color: #6b7280;">${example.totalWeight} kg</span>
-
-                                                            <span style="font-weight: 600; color: #92400e;">Shipping Carrier:</span>
-                                                            <span style="color: #6b7280;">${example.shippingLine}</span>
-                                                        </div>
-                                                    </div>
-                                                `).join('')}
-                                            </div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    <!-- Missing Carriers Alert - MOVED TO BOTTOM -->
-                    ${results.missingCarriers.length > 0 ? `
-                    <div class="missing-carriers-table">
-                        <h2 style="color: #92400e; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="font-size: 1.5rem;">📦</span> Missing Shipping Carriers/Methods - Action Required
-                        </h2>
-                        <p style="color: #78350f; margin-bottom: 1.5rem; font-size: 0.95rem;">
-                            The following shipping carriers/methods were found in your orders but don't have rate sheets. Please request these rate sheets from Mrek to process these ${results.missingCarriers.reduce((total, item) => total + item.orderCount, 0)} orders.
-                        </p>
-                        <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 8px; overflow: hidden;">
-                                <thead>
-                                    <tr style="background: #fef3c7; border-bottom: 2px solid #fde68a;">
-                                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: #92400e; font-size: 0.8125rem;">Shipping Carrier/Method</th>
-                                        <th style="padding: 1rem; text-align: center; font-weight: 600; color: #92400e; font-size: 0.8125rem;">Number of Orders</th>
-                                        <th style="padding: 1rem; text-align: left; font-weight: 600; color: #92400e; font-size: 0.8125rem;">Sample Order IDs</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${results.missingCarriers.map((item, idx) => `
-                                        <tr style="border-bottom: 1px solid #fde68a; ${idx % 2 === 0 ? 'background: #fffbeb;' : 'background: #ffffff;'}">
-                                            <td style="padding: 1rem; font-weight: 600; color: #78350f;">${item.carrier}</td>
-                                            <td style="padding: 1rem; text-align: center; color: #d97706; font-weight: 700; font-size: 1.1rem;">${item.orderCount}</td>
-                                            <td style="padding: 1rem; color: #64748b; font-size: 0.875rem;">${item.orderIds.slice(0, 5).join(', ')}${item.orderIds.length > 5 ? '...' : ''}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    ` : ''}
                 `;
-            }
-            
-            function generateOrderTable(orders, type) {
-                if (orders.length === 0) {
-                    return `<p style="color: #94a3b8; text-align: center; padding: 2rem;">No ${type} orders</p>`;
-                }
-
-                const isInvalid = type === 'invalid';
-
-                return `
-                    <div class="table-container">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
-                        <thead>
-                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Order #</th>
-                                <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Country</th>
-                                <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Weight (kg)</th>
-                                <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Charged (USD)</th>
-                                <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Charged (CNY)</th>
-                                ${!isInvalid ? `
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Expected (USD)</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Expected (CNY)</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Difference</th>
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Bracket</th>
-                                ` : `
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Shipping Carrier</th>
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Issue</th>
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Details</th>
-                                `}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${orders.map((order, idx) => `
-                                <tr style="border-bottom: 1px solid #e5e7eb; ${idx % 2 === 0 ? 'background: #f9fafb;' : ''}">
-                                    <td style="padding: 0.75rem; font-weight: 500; color: #7c3aed;">${order.orderId}</td>
-                                    <td style="padding: 0.75rem; color: #6b7280;">${order.country}</td>
-                                    <td style="padding: 0.75rem; text-align: right; color: #6b7280;">${order.totalWeight}</td>
-                                    <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.chargedUSD}</td>
-                                    <td style="padding: 0.75rem; text-align: right; color: #6b7280;">¥${order.chargedCNY}</td>
-                                    ${!isInvalid ? `
-                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.expectedUSD}</td>
-                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">¥${order.expectedCNY}</td>
-                                        <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${parseFloat(order.difference) > 0 ? '#dc2626' : '#059669'};">
-                                            ${parseFloat(order.difference) > 0 ? '+' : ''}$${order.difference}
-                                        </td>
-                                        <td style="padding: 0.75rem; color: #6b7280; font-size: 0.75rem;">${order.bracket}</td>
-                                    ` : `
-                                        <td style="padding: 0.75rem; color: #6b7280; font-size: 0.875rem;">${order.shippingLine}</td>
-                                        <td style="padding: 0.75rem; color: #dc2626; font-size: 0.875rem; font-weight: 600;">${order.reason}</td>
-                                        <td style="padding: 0.75rem; color: #6b7280; font-size: 0.813rem; line-height: 1.4;">${order.details || ''}</td>
-                                    `}
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                    </div>
-                `;
-            }
-            
-            function toggleAccordion(id) {
-                const content = document.getElementById(`content-${id}`);
-                const chevron = document.getElementById(`chevron-${id}`);
-
-                if (content.classList.contains('open')) {
-                    content.classList.remove('open');
-                    chevron.classList.remove('open');
-                } else {
-                    content.classList.add('open');
-                    chevron.classList.add('open');
-                }
             }
 
             function switchTab(tabName) {
-                // Hide all tab contents
                 document.querySelectorAll('.tab-content').forEach(content => {
                     content.style.display = 'none';
                 });
-
-                // Remove active class from all tabs
                 document.querySelectorAll('.tab-btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
-
-                // Show selected tab content
                 document.getElementById(`content-${tabName}`).style.display = 'block';
-
-                // Add active class to selected tab
                 document.getElementById(`tab-${tabName}`).classList.add('active');
             }
-            
+
             async function downloadExcel(type) {
-                const data = window.resultsData[type];
+                const data = type === 'remoteOrders' ? resultsData.remoteOrders : resultsData[type];
                 if (!data || !data.length) {
                     alert("No data available for download");
                     return;
                 }
 
-                // Create a new workbook and worksheet
                 const workbook = new ExcelJS.Workbook();
-                const worksheet = workbook.addWorksheet(type.charAt(0).toUpperCase() + type.slice(1) + ' Orders');
-
-                // Define colors for each type
-                const colors = {
-                    overcharge: { header: 'FFDC2626', row: 'FFFEE2E2' },
-                    undercharge: { header: 'FF059669', row: 'FFD1FAE5' },
-                    accurate: { header: 'FFD97706', row: 'FFFEF3C7' },
-                    invalid: { header: 'FF6B7280', row: 'FFF3F4F6' }
-                };
+                const worksheet = workbook.addWorksheet(type.charAt(0).toUpperCase() + type.slice(1));
 
                 const isInvalid = type === 'invalid';
 
-                // Define headers based on type
                 const headers = isInvalid
-                    ? ['Order ID', 'Country', 'Weight (kg)', 'Charged CNY', 'Charged USD', 'Shipping Carrier', 'Issue', 'Details']
-                    : ['Order ID', 'Country', 'Weight (kg)', 'Charged CNY', 'Charged USD', 'Expected CNY', 'Expected USD', 'Exchange Rate', 'Difference USD', 'Bracket', 'Shipping Line'];
+                    ? ['Order ID', 'Country', 'State', 'ZIP', 'Weight (kg)', 'Charged CNY', 'Charged USD', 'Shipping Carrier', 'Issue', 'Details']
+                    : ['Order ID', 'Country', 'State', 'ZIP', 'Weight (kg)', 'Ship CNY', 'Ship USD', 'Handling USD', 'Remote USD', 'Total USD', 'Expected CNY', 'Expected USD', 'Difference USD', 'Bracket', 'Remote Status', 'Shipping Line'];
 
-                // Add header row with styling
                 const headerRow = worksheet.addRow(headers);
-                headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-                headerRow.fill = {
-                    type: 'pattern',
-                    pattern: 'solid',
-                    fgColor: { argb: colors[type].header }
-                };
-                headerRow.height = 25;
-                headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+                headerRow.font = { bold: true };
 
-                // Initialize totals
-                let totalCNY = 0, totalUSD = 0, totalExpCNY = 0, totalExpUSD = 0, totalDiff = 0;
-
-                // Add data rows
-                data.forEach((order, idx) => {
-                    const rowData = isInvalid
-                        ? [
+                data.forEach(order => {
+                    if (isInvalid) {
+                        worksheet.addRow([
                             order.orderId,
-                            order.country || '',
+                            order.country,
+                            order.state || '',
+                            order.postCode || '',
                             order.totalWeight,
                             order.chargedCNY,
                             order.chargedUSD,
                             order.shippingLine,
                             order.reason || '',
                             order.details || ''
-                        ]
-                        : [
+                        ]);
+                    } else {
+                        worksheet.addRow([
                             order.orderId,
-                            order.country || '',
+                            order.country,
+                            order.state || '',
+                            order.postCode || '',
                             order.totalWeight,
                             order.chargedCNY,
                             order.chargedUSD,
+                            order.handlingUSD,
+                            order.remoteChargeUSD,
+                            order.totalChargedUSD,
                             order.expectedCNY,
                             order.expectedUSD,
-                            order.exchangeRate || '',
                             order.difference,
                             order.bracket,
+                            order.remoteStatus,
                             order.shippingLine
-                        ];
-
-                    const row = worksheet.addRow(rowData);
-
-                    // Alternate row colors
-                    if (idx % 2 === 0) {
-                        row.fill = {
-                            type: 'pattern',
-                            pattern: 'solid',
-                            fgColor: { argb: colors[type].row }
-                        };
-                    }
-
-                    // Calculate totals (only for non-invalid orders)
-                    if (!isInvalid && order.expectedCNY !== "N/A") {
-                        totalCNY += parseFloat(order.chargedCNY);
-                        totalUSD += parseFloat(order.chargedUSD);
-                        totalExpCNY += parseFloat(order.expectedCNY);
-                        totalExpUSD += parseFloat(order.expectedUSD);
-                        totalDiff += parseFloat(order.difference);
+                        ]);
                     }
                 });
 
-                // Add total row for non-invalid types
-                if (!isInvalid && data.length > 0 && data[0].expectedCNY !== "N/A") {
-                    worksheet.addRow([]);
-                    const totalRow = worksheet.addRow([
-                        'TOTAL', '', '',
-                        totalCNY.toFixed(2),
-                        totalUSD.toFixed(2),
-                        totalExpCNY.toFixed(2),
-                        totalExpUSD.toFixed(2),
-                        '',
-                        totalDiff.toFixed(2),
-                        '', ''
-                    ]);
-                    totalRow.font = { bold: true };
-                    totalRow.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FFE2E8F0' }
-                    };
-                }
-
-                // Set column widths
-                worksheet.columns = headers.map((header, idx) => {
-                    if (header === 'Order ID') return { width: 15 };
-                    if (header === 'Country') return { width: 12 };
-                    if (header === 'Weight (kg)') return { width: 12 };
-                    if (header === 'Charged CNY' || header === 'Expected CNY') return { width: 14 };
-                    if (header === 'Charged USD' || header === 'Expected USD') return { width: 14 };
-                    if (header === 'Exchange Rate') return { width: 14 };
-                    if (header === 'Difference USD') return { width: 14 };
-                    if (header === 'Bracket') return { width: 25 };
-                    if (header === 'Shipping Carrier' || header === 'Shipping Line') return { width: 20 };
-                    if (header === 'Issue') return { width: 25 };
-                    if (header === 'Details') return { width: 50 };
-                    return { width: 15 };
-                });
-
-                // Generate and download the file
                 const buffer = await workbook.xlsx.writeBuffer();
                 const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 const url = URL.createObjectURL(blob);
@@ -1456,22 +1362,17 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
             }
 
             function shareDashboard(event) {
-                if (!window.resultsData) {
+                if (!resultsData) {
                     alert("No results to share");
                     return;
                 }
 
-                // Encode results data to base64
-                const dataStr = JSON.stringify(window.resultsData);
+                const dataStr = JSON.stringify(resultsData);
                 const base64Data = btoa(encodeURIComponent(dataStr));
-
-                // Create shareable URL with hash
                 const url = new URL(window.location.href.split('#')[0]);
                 url.hash = 'results=' + base64Data;
 
-                // Copy to clipboard
                 navigator.clipboard.writeText(url.toString()).then(() => {
-                    // Show success message
                     const btn = event.target.closest('button');
                     const originalText = btn.innerHTML;
                     btn.innerHTML = '✅ Link Copied to Clipboard!';
@@ -1482,11 +1383,9 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                         btn.style.background = '#2d3748';
                     }, 3000);
                 }).catch(err => {
-                    // Fallback: show the URL in a prompt
                     prompt("Copy this link to share:", url.toString());
                 });
 
-                // Also update browser URL
                 window.history.pushState({}, '', url);
             }
 
@@ -1495,16 +1394,12 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                 if (!hash || !hash.includes('results=')) return;
 
                 try {
-                    // Extract and decode results data
                     const base64Data = hash.split('results=')[1];
                     const dataStr = decodeURIComponent(atob(base64Data));
                     const results = JSON.parse(dataStr);
 
-                    // Store in global variable and display
-                    window.resultsData = results;
+                    resultsData = results;
                     displayResults(results);
-
-                    // Hide the input form and show results
                     document.querySelector('.card').style.display = 'none';
                     document.getElementById('resultsContainer').classList.remove('hidden');
                 } catch (error) {
@@ -1512,7 +1407,6 @@ Return ONLY JSON: {"orderIdCol":0,"countryCol":1,"weightCol":2,"cnyCostCol":3,"u
                 }
             }
 
-            // Load results from URL on page load
             window.addEventListener('DOMContentLoaded', () => {
                 loadFromURL();
                 loadResultsFromURL();
