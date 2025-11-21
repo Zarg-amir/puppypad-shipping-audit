@@ -1,836 +1,1019 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PuppyPad Shipping Auditor</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-                font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-                min-height: 100vh;
-                padding: 2rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .container { max-width: 1400px; margin: 0 auto; width: 100%; }
-            .card {
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-radius: 12px;
-                padding: 2rem;
-                margin-bottom: 1.5rem;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            }
-            .header {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 1rem;
-                margin-bottom: 2rem;
-            }
-            .icon {
-                width: 5rem;
-                height: 5rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .icon img {
-                width: 100%;
-                height: 100%;
-                object-fit: contain;
-            }
-            h1 {
-                font-size: 2rem;
-                color: #1e293b;
-                font-weight: 700;
-                text-align: center;
-            }
-            .form-row {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 1.5rem;
-                margin-bottom: 1.5rem;
-            }
-            .form-group { margin-bottom: 1.5rem; }
-            .form-group-inline {
-                display: grid;
-                grid-template-columns: 280px 1fr;
-                gap: 1rem;
-                align-items: flex-end;
-            }
-            label {
-                display: block;
-                font-weight: 600;
-                color: #475569;
-                margin-bottom: 0.5rem;
-                font-size: 0.875rem;
-            }
-            input[type="number"],
-            input[type="text"] {
-                padding: 0.875rem 1rem;
-                background: #ffffff;
-                border: 1px solid #cbd5e1;
-                border-radius: 8px;
-                font-size: 1rem;
-                color: #1e293b;
-                transition: all 0.2s;
-                font-family: 'Inter', sans-serif;
-                width: 100%;
-            }
-            input[type="number"]::placeholder,
-            input[type="text"]::placeholder {
-                color: #94a3b8;
-            }
-            input:focus {
-                outline: none;
-                border-color: #fbbf24;
-                box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
-            }
-            .file-upload {
-                border: 2px dashed #cbd5e1;
-                border-radius: 8px;
-                padding: 1.5rem;
-                text-align: center;
-                cursor: pointer;
-                transition: all 0.2s;
-                background: #f8fafc;
-                color: #64748b;
-            }
-            .file-upload:hover {
-                border-color: #fbbf24;
-                background: #fffbeb;
-            }
-            .file-upload.has-file {
-                border-color: #fbbf24;
-                background: #fffbeb;
-            }
-            .file-name {
-                color: #f59e0b;
-                font-weight: 600;
-            }
-            button {
-                padding: 0.875rem 2rem;
-                background: #2d3748;
-                color: #ffffff;
-                border: none;
-                border-radius: 8px;
-                font-size: 1rem;
-                font-weight: 700;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            button:hover:not(:disabled) {
-                background: #1a202c;
-                transform: translateY(-1px);
-            }
-            button:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-            .progress-container {
-                background: #f8fafc;
-                border: 1px solid #e2e8f0;
-                border-radius: 8px;
-                padding: 1.5rem;
-                margin: 1rem 0;
-            }
-            .progress-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 1rem;
-            }
-            .progress-text {
-                font-weight: 600;
-                color: #f59e0b;
-                font-size: 1rem;
-            }
-            .progress-percentage {
-                font-weight: 700;
-                color: #f59e0b;
-                font-size: 1.5rem;
-            }
-            .progress-bar-container {
-                width: 100%;
-                height: 8px;
-                background: #e2e8f0;
-                border-radius: 999px;
-                overflow: hidden;
-                margin-bottom: 0.75rem;
-            }
-            .progress-bar {
-                height: 100%;
-                background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
-                border-radius: 999px;
-                transition: width 0.3s ease;
-                width: 0%;
-            }
-            .progress-status {
-                color: #64748b;
-                font-size: 0.875rem;
-            }
-            .status-log {
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-radius: 8px;
-                padding: 1rem;
-                max-height: 150px;
-                overflow-y: auto;
-                font-size: 0.813rem;
-                font-family: 'Courier New', monospace;
-                margin-top: 1rem;
-            }
-            .status-line {
-                margin-bottom: 0.25rem;
-                color: #64748b;
-            }
-            .status-line.success {
-                color: #10b981;
-            }
-            .status-line.error {
-                color: #ef4444;
-            }
-            .results-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 1.5rem;
-                margin-bottom: 2rem;
-            }
-            .result-card {
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-radius: 12px;
-                padding: 1.5rem;
-                transition: all 0.2s;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            }
-            .result-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            }
-            .result-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 1rem;
-            }
-            .result-icon {
-                width: 2.5rem;
-                height: 2.5rem;
-                border-radius: 8px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.25rem;
-            }
-            .result-amount {
-                font-size: 1.75rem;
-                font-weight: 800;
-                margin: 0.5rem 0;
-            }
-            .download-btn {
-                padding: 0.75rem 1rem;
-                border-radius: 6px;
-                cursor: pointer;
-                transition: all 0.2s;
-                width: 100%;
-                font-weight: 600;
-                font-size: 0.875rem;
-                background: #2d3748 !important;
-                color: #ffffff !important;
-                border: none;
-            }
-            .download-btn:hover {
-                background: #1a202c !important;
-                transform: translateY(-1px);
-            }
-            .input-toggle {
-                display: flex;
-                gap: 0.5rem;
-                margin-bottom: 0.75rem;
-            }
-            .toggle-btn {
-                padding: 0.5rem 1rem;
-                background: #e2e8f0;
-                border: none;
-                border-radius: 6px;
-                color: #475569;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-                font-size: 0.813rem;
-                flex: 1;
-            }
-            .toggle-btn.active {
-                background: #2d3748;
-                color: #ffffff;
-            }
-            .input-option {
-                display: none;
-            }
-            .input-option.active {
-                display: block;
-            }
-            .error-box {
-                background: #fef2f2;
-                border: 1px solid #fecaca;
-                color: #991b1b;
-                padding: 1rem;
-                border-radius: 8px;
-                margin: 1rem 0;
-            }
-            .hidden { display: none; }
-            table {
-                border-collapse: collapse;
-                width: 100%;
-                background: #ffffff;
-            }
-            th, td {
-                padding: 0.875rem;
-                text-align: left;
-            }
-            th {
-                font-weight: 600;
-                color: #475569;
-                background: #f8fafc;
-                border-bottom: 2px solid #e2e8f0;
-                font-size: 0.8125rem;
-            }
-            td {
-                color: #334155;
-                border-bottom: 1px solid #f1f5f9;
-                font-size: 0.875rem;
-            }
-            tr:hover {
-                background: #f8fafc;
-            }
-            .tab-btn {
-                padding: 0.5rem 1rem;
-                background: #e2e8f0;
-                border: none;
-                border-radius: 6px;
-                color: #475569;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-                font-size: 0.875rem;
-            }
-            .tab-btn:hover {
-                background: #cbd5e1;
-            }
-            .tab-btn.active {
-                background: #2d3748;
-                color: #ffffff;
-            }
-            .accordion {
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-radius: 12px;
-                overflow: hidden;
-                margin-bottom: 1.5rem;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            }
-            .accordion-header {
-                padding: 1.5rem;
-                cursor: pointer;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                background: #fef2f2;
-                transition: all 0.2s;
-            }
-            .accordion-header:hover {
-                background: #fee2e2;
-            }
-            .accordion-title {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                font-size: 1.125rem;
-                font-weight: 700;
-                color: #991b1b;
-            }
-            .accordion-chevron {
-                font-size: 1.5rem;
-                transition: transform 0.3s ease;
-                color: #f59e0b;
-            }
-            .accordion-chevron.open {
-                transform: rotate(180deg);
-            }
-            .accordion-content {
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease;
-            }
-            .accordion-content.open {
-                max-height: 5000px;
-                padding: 1.5rem;
-            }
-            .missing-carriers-table {
-                background: #fffbeb;
-                border: 1px solid #fde68a;
-                border-radius: 12px;
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            }
-            .table-container {
-                max-height: 500px;
-                overflow-y: auto;
-                border-radius: 8px;
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-            }
-            .table-container::-webkit-scrollbar {
-                width: 10px;
-            }
-            .table-container::-webkit-scrollbar-track {
-                background: #f1f5f9;
-            }
-            .table-container::-webkit-scrollbar-thumb {
-                background: #cbd5e1;
-                border-radius: 5px;
-            }
-            .table-container::-webkit-scrollbar-thumb:hover {
-                background: #94a3b8;
-            }
-            h3 {
-                color: #1e293b;
-                font-weight: 600;
-                font-size: 1rem;
-            }
-            h2 {
-                color: #1e293b;
-                font-weight: 700;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="card">
-                <div class="header">
-                    <div class="icon">
-                        <img src="https://cdn.shopify.com/s/files/1/0433/0510/7612/files/navyblue-logo.svg?v=1754231041" alt="PuppyPad Logo">
-                    </div>
-                    <h1>PuppyPad Shipping Auditor</h1>
-                </div>
-
-                <div class="form-row">
-                    <!-- Shipping Line Charges -->
-                    <div class="form-group">
-                        <label>📊 Shipping Line Charges</label>
-                        <div class="input-toggle">
-                            <button class="toggle-btn" onclick="toggleInputType('rates', 'upload')">Upload File</button>
-                            <button class="toggle-btn active" onclick="toggleInputType('rates', 'link')">Google Sheet Link</button>
-                        </div>
-                        <div class="input-option" id="rates-upload">
-                            <div class="file-upload" id="ratesUpload" onclick="document.getElementById('ratesFile').click()">
-                                <span id="ratesLabel">📄 Click to upload Excel file</span>
-                            </div>
-                            <input type="file" id="ratesFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('rates')" />
-                        </div>
-                        <div class="input-option active" id="rates-link">
-                            <input type="text" id="ratesLink" placeholder="Paste Google Sheet link here" onchange="handleLinkInput('rates')">
-                        </div>
-                    </div>
-
-                    <!-- Mrek Orders -->
-                    <div class="form-group">
-                        <label>📦 Mrek Orders</label>
-                        <div class="input-toggle">
-                            <button class="toggle-btn" onclick="toggleInputType('orders', 'upload')">Upload File</button>
-                            <button class="toggle-btn active" onclick="toggleInputType('orders', 'link')">Google Sheet Link</button>
-                        </div>
-                        <div class="input-option" id="orders-upload">
-                            <div class="file-upload" id="ordersUpload" onclick="document.getElementById('ordersFile').click()">
-                                <span id="ordersLabel">📄 Click to upload Excel file</span>
-                            </div>
-                            <input type="file" id="ordersFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('orders')" />
-                        </div>
-                        <div class="input-option active" id="orders-link">
-                            <input type="text" id="ordersLink" placeholder="Paste Google Sheet link here" onchange="handleLinkInput('orders')">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Remote Reference -->
-                <div class="form-group">
-                    <label>📍 Remote Address Reference (Optional)</label>
-                    <div class="input-toggle">
-                        <button class="toggle-btn" onclick="toggleInputType('remote', 'upload')">Upload File</button>
-                        <button class="toggle-btn active" onclick="toggleInputType('remote', 'link')">Google Sheet Link</button>
-                    </div>
-                    <div class="input-option" id="remote-upload">
-                        <div class="file-upload" id="remoteUpload" onclick="document.getElementById('remoteFile').click()">
-                            <span id="remoteLabel">📄 Click to upload Remote ZIP list</span>
-                        </div>
-                        <input type="file" id="remoteFile" accept=".xlsx,.xls" style="display: none" onchange="handleFileSelect('remote')" />
-                    </div>
-                    <div class="input-option active" id="remote-link">
-                        <input type="text" id="remoteLink" placeholder="Paste Google Sheet link here" onchange="handleLinkInput('remote')">
-                    </div>
-                </div>
-
-                <div id="errorBox" class="error-box hidden"></div>
-
-                <div id="progressContainer" class="progress-container hidden">
-                    <div class="progress-header">
-                        <div class="progress-text" id="progressText">Initializing...</div>
-                        <div class="progress-percentage" id="progressPercent">0%</div>
-                    </div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" id="progressBar"></div>
-                    </div>
-                    <div class="progress-status" id="progressStatus">Preparing...</div>
-                    <div class="status-log" id="statusLog"></div>
-                </div>
-
-                <div class="form-group-inline">
-                    <div class="form-group" style="margin: 0;">
-                        <label>Exchange Rate (CNY to USD)</label>
-                        <input type="number" id="exchangeRate" value="6.9" step="0.01" />
-                    </div>
-                    <button id="analyzeBtn" onclick="analyzeOrders()">📊 Analyze All Orders</button>
-                </div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>PuppyPad Shipping Auditor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: radial-gradient(circle at top, #f9fafb 0, #e5e7eb 40%, #e2e8f0 100%);
+        min-height: 100vh;
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+      }
+      .container {
+        max-width: 1440px;
+        width: 100%;
+      }
+      .app-shell {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 1.5rem;
+        align-items: flex-start;
+      }
+      @media (max-width: 1100px) {
+        .app-shell {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 1.5rem;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+      .card-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      .card-subtitle {
+        font-size: 0.85rem;
+        color: #64748b;
+      }
+      .logo-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+      .logo-img {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+      }
+      .logo-img img {
+        max-width: 30px;
+        max-height: 30px;
+      }
+      .logo-text h1 {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      .logo-text span {
+        font-size: 0.8rem;
+        color: #64748b;
+      }
+      .section-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.75rem;
+      }
+      .file-upload {
+        border: 1.5px dashed #cbd5e1;
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.15s ease-out;
+        background: #f8fafc;
+        font-size: 0.85rem;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+      .file-upload:hover {
+        border-color: #f97316;
+        background: #fffbeb;
+      }
+      .file-upload.has-file {
+        border-color: #f97316;
+        background: #fffbeb;
+      }
+      .file-primary {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+      .file-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+      }
+      .file-label-main {
+        font-weight: 600;
+        color: #0f172a;
+      }
+      .file-label-sub {
+        font-size: 0.8rem;
+        color: #94a3b8;
+      }
+      .file-count {
+        font-size: 0.8rem;
+        color: #f97316;
+        font-weight: 600;
+      }
+      .helper-text {
+        font-size: 0.78rem;
+        color: #6b7280;
+        margin-top: 0.4rem;
+        line-height: 1.4;
+      }
+      .helper-text strong {
+        color: #0f172a;
+      }
+      .field-group {
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.35rem;
+      }
+      input[type='number'] {
+        width: 100%;
+        padding: 0.7rem 0.8rem;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        font-size: 0.9rem;
+        color: #0f172a;
+      }
+      input[type='number']:focus {
+        outline: none;
+        border-color: #f97316;
+        box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.18);
+      }
+      button.primary {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 999px;
+        border: none;
+        background: linear-gradient(135deg, #f97316, #ea580c);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.15s ease-out;
+      }
+      button.primary:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(248, 113, 22, 0.35);
+      }
+      button.primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+      .error-box {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        border-radius: 10px;
+        padding: 0.75rem 0.9rem;
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+      }
+      .hidden {
+        display: none;
+      }
+      .progress-card {
+        margin-top: 1rem;
+      }
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.4rem;
+      }
+      .progress-text {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #f97316;
+      }
+      .progress-percentage {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #f97316;
+      }
+      .progress-bar-container {
+        width: 100%;
+        height: 6px;
+        border-radius: 999px;
+        background: #e5e7eb;
+        overflow: hidden;
+        margin-bottom: 0.4rem;
+      }
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f97316, #ea580c);
+        transition: width 0.25s ease-out;
+      }
+      .progress-status {
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+      .status-log {
+        margin-top: 0.5rem;
+        max-height: 140px;
+        overflow-y: auto;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        padding: 0.5rem 0.6rem;
+        font-family: 'SFMono-Regular', ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+        font-size: 0.75rem;
+      }
+      .status-line {
+        color: #6b7280;
+        margin-bottom: 0.2rem;
+      }
+      .status-line.success {
+        color: #16a34a;
+      }
+      .status-line.error {
+        color: #ef4444;
+      }
+      .status-line.info {
+        color: #0ea5e9;
+      }
+      /* Dashboard */
+      .dashboard-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        gap: 1rem;
+      }
+      .dashboard-title-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .dashboard-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      .dashboard-subtitle {
+        font-size: 0.85rem;
+        color: #64748b;
+      }
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .summary-card {
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        background: #0f172a;
+        color: #e5e7eb;
+        position: relative;
+        overflow: hidden;
+      }
+      .summary-card:nth-child(2) {
+        background: #f97316;
+      }
+      .summary-card:nth-child(3) {
+        background: #15803d;
+      }
+      .summary-card:nth-child(4) {
+        background: #0369a1;
+      }
+      .summary-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(241, 245, 249, 0.7);
+        margin-bottom: 0.25rem;
+      }
+      .summary-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+      }
+      .summary-meta {
+        font-size: 0.78rem;
+        margin-top: 0.25rem;
+        color: rgba(241, 245, 249, 0.8);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      .badge.success {
+        background: rgba(22, 163, 74, 0.14);
+        color: #14532d;
+      }
+      .badge.warn {
+        background: rgba(234, 179, 8, 0.16);
+        color: #854d0e;
+      }
+      .badge.error {
+        background: rgba(239, 68, 68, 0.14);
+        color: #991b1b;
+      }
+      .two-col-main {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 1rem;
+      }
+      @media (max-width: 1100px) {
+        .two-col-main {
+          grid-template-columns: 1fr;
+        }
+      }
+      .tab-nav {
+        display: inline-flex;
+        border-radius: 999px;
+        background: #f1f5f9;
+        padding: 0.25rem;
+        gap: 0.25rem;
+      }
+      .tab-pill {
+        border-radius: 999px;
+        padding: 0.35rem 0.9rem;
+        font-size: 0.8rem;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .tab-pill.active {
+        background: #0f172a;
+        color: #e5e7eb;
+      }
+      .tab-content {
+        margin-top: 1rem;
+      }
+      .table-container {
+        max-height: 420px;
+        overflow-y: auto;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      thead {
+        position: sticky;
+        top: 0;
+        background: #f9fafb;
+        z-index: 1;
+      }
+      th,
+      td {
+        padding: 0.55rem 0.75rem;
+        text-align: left;
+      }
+      th {
+        font-weight: 600;
+        color: #475569;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      td {
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+      }
+      tr:nth-child(even) td {
+        background: #f9fafb;
+      }
+      tr:hover td {
+        background: #eef2ff;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      .chip-remote-ok {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .chip-remote-warn {
+        background: #fef9c3;
+        color: #854d0e;
+      }
+      .chip-remote-bad {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+      .pill-filter {
+        display: inline-flex;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+      }
+      .pill-btn {
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        padding: 0.25rem 0.7rem;
+        font-size: 0.75rem;
+        background: #ffffff;
+        color: #64748b;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+      .pill-btn.active {
+        background: #0f172a;
+        color: #e5e7eb;
+        border-color: transparent;
+      }
+      .pill-badge {
+        font-size: 0.7rem;
+        background: rgba(15, 23, 42, 0.08);
+        padding: 0.05rem 0.4rem;
+        border-radius: 999px;
+      }
+      .chart-wrap {
+        height: 280px;
+        position: relative;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="app-shell">
+        <!-- LEFT: Inputs & Progress -->
+        <div>
+          <div class="card">
+            <div class="logo-wrap">
+              <div class="logo-img">
+                <img
+                  src="https://cdn.shopify.com/s/files/1/0433/0510/7612/files/navyblue-logo.svg?v=1754231041"
+                  alt="PuppyPad Logo"
+                />
+              </div>
+              <div class="logo-text">
+                <h1>PuppyPad Shipping Auditor</h1>
+                <span>Audit shipping, surcharges & remote logic in one place.</span>
+              </div>
             </div>
 
-            <div id="resultsContainer" class="hidden"></div>
+            <div class="field-group">
+              <div class="section-label">Shipping Rate Files</div>
+              <div
+                class="file-upload"
+                id="ratesUpload"
+                onclick="document.getElementById('ratesFile').click()"
+              >
+                <div class="file-primary">
+                  <div class="file-icon">📦</div>
+                  <div>
+                    <div class="file-label-main">Upload carrier rate Excel files</div>
+                    <div class="file-label-sub">
+                      YunTu / Yanwen rate sheets – you can select multiple files.
+                    </div>
+                  </div>
+                </div>
+                <div class="file-count" id="ratesCountLabel">No files</div>
+              </div>
+              <input
+                type="file"
+                id="ratesFile"
+                accept=".xlsx,.xls"
+                style="display: none"
+                multiple
+                onchange="handleFileSelect('rates')"
+              />
+              <p class="helper-text">
+                <strong>Important:</strong> No rates are hard-coded in this app. All expected shipping
+                costs are calculated directly from the uploaded carrier rate files.
+              </p>
+              <div class="field-group" style="margin-top: 0.5rem;">
+                <label for="activeRateSelect">Active rate file for this audit</label>
+                <select
+                  id="activeRateSelect"
+                  style="
+                    width: 100%;
+                    padding: 0.6rem 0.8rem;
+                    border-radius: 8px;
+                    border: 1px solid #cbd5e1;
+                    font-size: 0.85rem;
+                  "
+                >
+                  <option value="">No file selected</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="section-label">Mrek Orders Invoice</div>
+              <div
+                class="file-upload"
+                id="ordersUpload"
+                onclick="document.getElementById('ordersFile').click()"
+              >
+                <div class="file-primary">
+                  <div class="file-icon">📑</div>
+                  <div>
+                    <div class="file-label-main">Upload Mrek invoice (orders) Excel</div>
+                    <div class="file-label-sub">
+                      Contains order ID, shipping method, weight, costs, handling, remote, etc.
+                    </div>
+                  </div>
+                </div>
+                <div class="file-count" id="ordersCountLabel">No file</div>
+              </div>
+              <input
+                type="file"
+                id="ordersFile"
+                accept=".xlsx,.xls"
+                style="display: none"
+                onchange="handleFileSelect('orders')"
+              />
+            </div>
+
+            <div class="field-group">
+              <div class="section-label">Remote Address Reference (Optional)</div>
+              <div
+                class="file-upload"
+                id="remoteRefUpload"
+                onclick="document.getElementById('remoteRefFile').click()"
+              >
+                <div class="file-primary">
+                  <div class="file-icon">📍</div>
+                  <div>
+                    <div class="file-label-main">Upload remote address rules</div>
+                    <div class="file-label-sub">
+                      Format: Carrier | Country | State | ZipStart | ZipEnd
+                    </div>
+                  </div>
+                </div>
+                <div class="file-count" id="remoteRefCountLabel">Optional</div>
+              </div>
+              <input
+                type="file"
+                id="remoteRefFile"
+                accept=".xlsx,.xls"
+                style="display: none"
+                onchange="handleFileSelect('remoteRef')"
+              />
+              <p class="helper-text">
+                This file defines what <strong>should</strong> be considered a remote address (per
+                carrier). Example: all AK / HI / PR ZIP ranges for YunTu.
+              </p>
+            </div>
+
+            <div class="field-group">
+              <div class="section-label">Remote Surcharge Log (Carrier)</div>
+              <div
+                class="file-upload"
+                id="remoteSurchargeUpload"
+                onclick="document.getElementById('remoteSurchargeFile').click()"
+              >
+                <div class="file-primary">
+                  <div class="file-icon">🚚</div>
+                  <div>
+                    <div class="file-label-main">Upload carrier remote surcharge Excel</div>
+                    <div class="file-label-sub">
+                      Export from YunTu / Yanwen remote surcharge report.
+                    </div>
+                  </div>
+                </div>
+                <div class="file-count" id="remoteSurchargeCountLabel">Optional</div>
+              </div>
+              <input
+                type="file"
+                id="remoteSurchargeFile"
+                accept=".xlsx,.xls"
+                style="display: none"
+                onchange="handleFileSelect('remoteSurcharge')"
+              />
+              <p class="helper-text">
+                This is the <strong>remote-area surcharge export</strong> from the shipping carrier
+                (e.g. YunTu). It lists which waybills <em>they</em> billed remote fees for (via
+                customer order number / waybill and a surcharge amount). The app uses it to verify
+                that Mrek’s invoice remote surcharges align with the carrier's actual charges.
+              </p>
+            </div>
+
+            <div id="errorBox" class="error-box hidden"></div>
+
+            <div class="field-group" style="margin-top: 0.75rem;">
+              <label>Exchange Rate (CNY → USD)</label>
+              <input type="number" id="exchangeRate" value="6.9" step="0.01" />
+            </div>
+
+            <button class="primary" id="analyzeBtn" onclick="analyzeOrders()">
+              <span>📊 Run Full Audit</span>
+            </button>
+
+            <div id="progressContainer" class="progress-card hidden">
+              <div class="progress-header">
+                <div class="progress-text" id="progressText">Initializing...</div>
+                <div class="progress-percentage" id="progressPercent">0%</div>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+              </div>
+              <div class="progress-status" id="progressStatus">Preparing…</div>
+              <div class="status-log" id="statusLog"></div>
+            </div>
+          </div>
         </div>
 
-        <script>
-            // GLOBAL STATE
-            let ratesData = null, ordersData = null, remoteRefData = null;
-            let remoteRules = [];
-            let resultsData = null;
+        <!-- RIGHT: Dashboard -->
+        <div id="resultsContainer" class="hidden">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
 
-            function handleFileSelect(type) {
-                const input = document.getElementById(type + "File");
-                const file = input.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: "array" });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
-                    if (type === "rates") {
-                        ratesData = jsonData;
-                        document.getElementById("ratesUpload").classList.add("has-file");
-                        document.getElementById("ratesLabel").innerHTML = `<span class="file-name">${file.name} (${jsonData.length} rows)</span>`;
-                    } else if (type === "orders") {
-                        ordersData = jsonData;
-                        document.getElementById("ordersUpload").classList.add("has-file");
-                        document.getElementById("ordersLabel").innerHTML = `<span class="file-name">${file.name} (${jsonData.length} rows)</span>`;
-                    } else if (type === "remote") {
-                        remoteRefData = jsonData;
-                        document.getElementById("remoteUpload").classList.add("has-file");
-                        document.getElementById("remoteLabel").innerHTML = `<span class="file-name">${file.name} (${jsonData.length} rows)</span>`;
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-                saveToURL();
+    <script>
+      // === GLOBAL STATE ===
+      let rateFileMetas = []; // {name, file}
+      let ordersData = null;
+      let remoteRefData = null;
+      let remoteSurchargeData = null;
+      let remoteRules = [];
+      let remoteSurchargeMap = {}; // key = packageNumber (customer order no), value = surchargeRMB
+      let resultsData = null;
+
+      // === GENERIC HELPERS ===
+      function showError(msg) {
+        const box = document.getElementById('errorBox');
+        box.textContent = msg;
+        box.classList.remove('hidden');
+      }
+
+      function clearError() {
+        const box = document.getElementById('errorBox');
+        box.classList.add('hidden');
+        box.textContent = '';
+      }
+
+      function addStatusLog(message, type = 'info') {
+        const log = document.getElementById('statusLog');
+        const line = document.createElement('div');
+        line.className = `status-line ${type}`;
+        line.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+        log.appendChild(line);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function updateProgress(percent, text, status) {
+        const container = document.getElementById('progressContainer');
+        container.classList.remove('hidden');
+        document.getElementById('progressBar').style.width = percent + '%';
+        document.getElementById('progressPercent').textContent = Math.round(percent) + '%';
+        document.getElementById('progressText').textContent = text;
+        if (status) document.getElementById('progressStatus').textContent = status;
+      }
+
+      function containsChinese(text) {
+        return /[\u4e00-\u9fa5]/.test(text);
+      }
+
+      // Call to your Vercel OpenAI proxy
+      async function callOpenAI(prompt) {
+        const response = await fetch('/api/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: 'Return ONLY valid JSON. No markdown, no explanation.' },
+              { role: 'user', content: prompt },
+            ],
+            temperature: 0,
+            max_tokens: 1000,
+          }),
+        });
+        if (!response.ok) {
+          const err = await response.text();
+          throw new Error(`OpenAI API failed: ${response.status} - ${err}`);
+        }
+        const data = await response.json();
+        const text = data?.choices?.[0]?.message?.content;
+        if (!text) throw new Error('Invalid OpenAI response');
+        return text;
+      }
+
+      function extractJSON(text) {
+        let cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const match = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+        if (match) cleaned = match[0];
+        return JSON.parse(cleaned);
+      }
+
+      // === FILE HANDLERS ===
+      function handleFileSelect(type) {
+        clearError();
+        const input = document.getElementById(
+          type === 'rates'
+            ? 'ratesFile'
+            : type === 'orders'
+            ? 'ordersFile'
+            : type === 'remoteRef'
+            ? 'remoteRefFile'
+            : 'remoteSurchargeFile'
+        );
+        if (!input.files || !input.files.length) return;
+
+        if (type === 'rates') {
+          rateFileMetas = Array.from(input.files).map((f) => ({ file: f, name: f.name }));
+          const label = document.getElementById('ratesCountLabel');
+          const upload = document.getElementById('ratesUpload');
+          upload.classList.add('has-file');
+          label.textContent = `${rateFileMetas.length} file${rateFileMetas.length > 1 ? 's' : ''}`;
+          // Populate select
+          const select = document.getElementById('activeRateSelect');
+          select.innerHTML = '<option value="">Select a rate file</option>';
+          rateFileMetas.forEach((meta, idx) => {
+            const opt = document.createElement('option');
+            opt.value = String(idx);
+            opt.textContent = meta.name;
+            select.appendChild(opt);
+          });
+          if (rateFileMetas.length === 1) select.value = '0';
+        } else {
+          const file = input.files[0];
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+            if (type === 'orders') {
+              ordersData = jsonData;
+              document.getElementById('ordersUpload').classList.add('has-file');
+              document.getElementById('ordersCountLabel').textContent = file.name;
+            } else if (type === 'remoteRef') {
+              remoteRefData = jsonData;
+              document.getElementById('remoteRefUpload').classList.add('has-file');
+              document.getElementById('remoteRefCountLabel').textContent = file.name;
+            } else if (type === 'remoteSurcharge') {
+              remoteSurchargeData = jsonData;
+              document.getElementById('remoteSurchargeUpload').classList.add('has-file');
+              document.getElementById('remoteSurchargeCountLabel').textContent = file.name;
             }
+          };
+          reader.readAsArrayBuffer(file);
+        }
+      }
 
-            function toggleInputType(type, inputType) {
-                const uploadOption = document.getElementById(`${type}-upload`);
-                const linkOption = document.getElementById(`${type}-link`);
-                const buttonsContainer = uploadOption.parentElement.querySelector('.input-toggle');
-                const buttons = buttonsContainer.querySelectorAll('.toggle-btn');
+      // === REMOTE ADDRESS REFERENCE PARSE ===
+      function parseRemoteRefSheet(data) {
+        remoteRules = [];
+        if (!data || data.length < 2) return;
+        // Expect header row then data rows:
+        // Carrier | Country | State | ZipStart | ZipEnd
+        for (let i = 1; i < data.length; i++) {
+          const row = data[i];
+          if (!row || row.length === 0) continue;
+          const carrier = (row[0] || '').toString().trim().toLowerCase();
+          const country = (row[1] || '').toString().trim().toUpperCase();
+          const state = (row[2] || '').toString().trim().toUpperCase() || null;
+          const zipStart =
+            row[3] !== undefined && row[3] !== '' ? String(row[3]).padStart(5, '0') : null;
+          const zipEnd =
+            row[4] !== undefined && row[4] !== '' ? String(row[4]).padStart(5, '0') : null;
+          if (!country && !zipStart && !zipEnd) continue;
+          remoteRules.push({ carrier, country, state, zipStart, zipEnd });
+        }
+      }
 
-                buttons.forEach(btn => btn.classList.remove('active'));
-                buttons.forEach(btn => {
-                    if ((inputType === 'upload' && btn.textContent.includes('Upload')) ||
-                        (inputType === 'link' && btn.textContent.includes('Link'))) {
-                        btn.classList.add('active');
-                    }
-                });
+      function inferCarrierKey(shippingLine) {
+        const s = (shippingLine || '').toLowerCase();
+        if (s.includes('yuntu') || s.includes('yunexpress') || s.includes('云途')) return 'yuntu';
+        if (s.includes('yanwen') || s.includes('燕文')) return 'yanwen';
+        return '';
+      }
 
-                uploadOption.classList.remove('active');
-                linkOption.classList.remove('active');
-                document.getElementById(`${type}-${inputType}`).classList.add('active');
+      function isAddressRemote(order) {
+        if (!remoteRules.length) return false;
+        const country = (order.country || '').toUpperCase();
+        const state = (order.state || '').toUpperCase();
+        const zip = (order.postCode || '').toString().padStart(5, '0');
+        const carrierKey = inferCarrierKey(order.shippingLine);
+
+        return remoteRules.some((rule) => {
+          if (rule.carrier && carrierKey && !carrierKey.includes(rule.carrier)) return false;
+          if (rule.country && rule.country !== country) return false;
+          if (rule.state && rule.state !== state) return false;
+          if (rule.zipStart && rule.zipEnd && zip >= rule.zipStart && zip <= rule.zipEnd)
+            return true;
+          return false;
+        });
+      }
+
+      // === REMOTE SURCHARGE LOG PARSE (CARRIER) ===
+      function parseRemoteSurchargeSheet(data) {
+        remoteSurchargeMap = {};
+        if (!data || data.length < 2) return;
+        const header = data[0].map((v) => v.toString());
+        let customerIdx = -1;
+        let amountIdx = -1;
+
+        header.forEach((h, idx) => {
+          if (h.includes('客户单号')) customerIdx = idx;
+          if (h.includes('偏远附加费')) amountIdx = idx;
+        });
+
+        if (customerIdx === -1 || amountIdx === -1) {
+          addStatusLog(
+            'Remote Surcharge log: could not detect 客户单号 / 偏远附加费 columns. Skipping carrier-remote comparison.',
+            'info'
+          );
+          return;
+        }
+
+        for (let i = 1; i < data.length; i++) {
+          const row = data[i];
+          if (!row || row.length <= Math.max(customerIdx, amountIdx)) continue;
+          const cust = (row[customerIdx] || '').toString().trim();
+          const amt = parseFloat(row[amountIdx]) || 0;
+          if (!cust || !amt) continue;
+          remoteSurchargeMap[cust] = amt;
+        }
+      }
+
+      // === RATE SHEET PARSE (GENERIC YUN-TYPE) ===
+      function parseRateSheet(jsonData) {
+        // We assume a YunTu-like layout:
+        // Row 0/1: meta, Row 1: header, from row2: [Country, ..., Weight(KG) at col3, Shipping cost RMB/kg at col6, Registration/fee at col7]
+        const ratesByCountry = {};
+        let currentCountry = null;
+
+        for (let i = 2; i < jsonData.length; i++) {
+          const row = jsonData[i];
+          if (!row || row.length < 7) continue;
+
+          if (row[0] && typeof row[0] === 'string' && row[0].trim()) {
+            currentCountry = row[0].toString().trim();
+            const normalized = currentCountry.toUpperCase();
+            if (!ratesByCountry[normalized]) ratesByCountry[normalized] = [];
+          }
+
+          const weightRange = row[3]; // Weight (KG)
+          const costPerKg = row[6];
+          const fee = row[7];
+
+          if (currentCountry && weightRange && costPerKg !== undefined && costPerKg !== '') {
+            const parsed = parseWeightRange(weightRange.toString());
+            if (parsed) {
+              const normalized = currentCountry.toUpperCase();
+              ratesByCountry[normalized].push({
+                minWeight: parsed.minWeight,
+                maxWeight: parsed.maxWeight,
+                costPerKg: parseFloat(costPerKg),
+                fixedFee: parseFloat(fee) || 0,
+                details: `${parsed.minWeight}-${parsed.maxWeight}kg @ ¥${costPerKg}/kg + ¥${fee || 0} fee`,
+              });
             }
+          }
+        }
 
-            async function handleLinkInput(type) {
-                const link = document.getElementById(type + "Link").value;
-                if (!link) return;
+        return ratesByCountry;
+      }
 
-                try {
-                    const match = link.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-                    if (!match) {
-                        showError("Invalid Google Sheets URL");
-                        return;
-                    }
+      function parseWeightRange(rangeStr) {
+        if (!rangeStr) return null;
+        // Accept formats like "0＜W≤0.1" or "0.1＜W≤0.2"
+        const match = rangeStr.match(/([\d.]+)[＜<].*?[≤<=]([\d.]+)/);
+        if (!match) return null;
+        return {
+          minWeight: parseFloat(match[1]),
+          maxWeight: parseFloat(match[2]),
+        };
+      }
 
-                    const sheetId = match[1];
-                    const exportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=xlsx`;
+      // === ANALYZE ===
+      async function analyzeOrders() {
+        clearError();
+        document.getElementById('resultsContainer').classList.add('hidden');
+        document.getElementById('resultsContainer').innerHTML = '';
+        document.getElementById('statusLog').innerHTML = '';
+        document.getElementById('progressContainer').classList.add('hidden');
 
-                    const response = await fetch(exportUrl);
-                    const arrayBuffer = await response.arrayBuffer();
-                    const data = new Uint8Array(arrayBuffer);
-                    const workbook = XLSX.read(data, { type: "array" });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
+        const btn = document.getElementById('analyzeBtn');
+        btn.disabled = true;
 
-                    if (type === "rates") {
-                        ratesData = jsonData;
-                        document.getElementById("ratesLabel").innerHTML = `<span class="file-name">✅ Loaded from Google Sheets (${jsonData.length} rows)</span>`;
-                    } else if (type === "orders") {
-                        ordersData = jsonData;
-                        document.getElementById("ordersLabel").innerHTML = `<span class="file-name">✅ Loaded from Google Sheets (${jsonData.length} rows)</span>`;
-                    } else if (type === "remote") {
-                        remoteRefData = jsonData;
-                        document.getElementById("remoteLabel").innerHTML = `<span class="file-name">✅ Loaded from Google Sheets (${jsonData.length} rows)</span>`;
-                    }
+        try {
+          if (!rateFileMetas.length) throw new Error('Upload at least one shipping rate Excel file.');
+          if (!ordersData) throw new Error('Upload the Mrek orders invoice Excel file.');
 
-                    saveToURL();
-                } catch (error) {
-                    showError("Failed to load Google Sheet. Make sure it's publicly accessible.");
-                }
-            }
+          const activeIndex = document.getElementById('activeRateSelect').value;
+          if (activeIndex === '') throw new Error('Select which rate file to use for this audit.');
 
-            function saveToURL() {
-                const exchangeRate = document.getElementById('exchangeRate').value;
-                const url = new URL(window.location);
-                url.searchParams.set('exchangeRate', exchangeRate);
-                window.history.pushState({}, '', url);
-            }
+          const exchangeRate = parseFloat(document.getElementById('exchangeRate').value);
+          if (isNaN(exchangeRate) || exchangeRate <= 0)
+            throw new Error('Please provide a valid CNY → USD exchange rate.');
 
-            function loadFromURL() {
-                const url = new URL(window.location);
-                const exchangeRate = url.searchParams.get('exchangeRate');
-                if (exchangeRate) {
-                    document.getElementById('exchangeRate').value = exchangeRate;
-                }
-            }
+          updateProgress(5, 'Reading selected rate file…', 'Loading Excel');
 
-            function updateProgress(percent, text, status) {
-                document.getElementById("progressContainer").classList.remove("hidden");
-                document.getElementById("progressBar").style.width = percent + "%";
-                document.getElementById("progressPercent").textContent = Math.round(percent) + "%";
-                document.getElementById("progressText").textContent = text;
-                if (status) document.getElementById("progressStatus").textContent = status;
-            }
+          // Read the selected rate file now
+          const rateMeta = rateFileMetas[parseInt(activeIndex, 10)];
+          const rateArrayBuffer = await rateMeta.file.arrayBuffer();
+          const rateWorkbook = XLSX.read(new Uint8Array(rateArrayBuffer), { type: 'array' });
+          const rateSheet = rateWorkbook.Sheets[rateWorkbook.SheetNames[0]];
+          const rateJson = XLSX.utils.sheet_to_json(rateSheet, { header: 1, defval: '' });
 
-            function addStatusLog(message, type = "info") {
-                const log = document.getElementById("statusLog");
-                const line = document.createElement("div");
-                line.className = `status-line ${type}`;
-                line.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
-                log.appendChild(line);
-                log.scrollTop = log.scrollHeight;
-            }
+          // The shipping line name (just for display / matching carrier string)
+          const shippingLineNameGuess =
+            rateJson[1] && rateJson[1][0] ? rateJson[1][0].toString().trim() : rateMeta.name;
 
-            function showError(message) {
-                document.getElementById("errorBox").textContent = message;
-                document.getElementById("errorBox").classList.remove("hidden");
-            }
+          // Parse rates
+          const ratesByCountry = parseRateSheet(rateJson);
+          const totalCountries = Object.keys(ratesByCountry).length;
+          updateProgress(15, 'Rate sheet parsed', `${totalCountries} countries detected`);
+          addStatusLog(
+            `Active rate file "${rateMeta.name}" parsed with ${totalCountries} countries.`,
+            'success'
+          );
 
-            async function callOpenAI(prompt) {
-                const response = await fetch("/api/openai", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        model: "gpt-4o-mini",
-                        messages: [
-                            { role: "system", content: "Return ONLY valid JSON. No markdown, no explanation." },
-                            { role: "user", content: prompt }
-                        ],
-                        temperature: 0,
-                        max_tokens: 1000,
-                    }),
-                });
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`API failed: ${response.status} - ${errorText}`);
-                }
-                const data = await response.json();
-                if (!data.choices?.[0]?.message?.content) throw new Error("Invalid API response");
-                return data.choices[0].message.content;
-            }
+          // Parse remote reference
+          if (remoteRefData) {
+            parseRemoteRefSheet(remoteRefData);
+            addStatusLog(`Loaded ${remoteRules.length} remote address rules.`, 'success');
+          } else {
+            addStatusLog('No Remote Address Reference uploaded – address-remote checks limited.', 'info');
+          }
 
-            function extractJSON(text) {
-                let cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-                const match = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-                if (match) cleaned = match[0];
-                return JSON.parse(cleaned);
-            }
+          // Parse remote surcharge log
+          if (remoteSurchargeData) {
+            parseRemoteSurchargeSheet(remoteSurchargeData);
+            const countKeys = Object.keys(remoteSurchargeMap).length;
+            addStatusLog(
+              `Loaded carrier remote surcharge entries for ${countKeys} package/customer IDs.`,
+              'success'
+            );
+          } else {
+            addStatusLog(
+              'No Remote Surcharge Log uploaded – cannot compare carrier-billed remote surcharges.',
+              'info'
+            );
+          }
 
-            function parseWeightRange(rangeStr) {
-                if (!rangeStr || typeof rangeStr !== 'string') return null;
-                const match = rangeStr.match(/([\d.]+)[＜<].*?[≤<=]([\d.]+)/);
-                if (!match) return null;
-                return {
-                    minWeight: parseFloat(match[1]),
-                    maxWeight: parseFloat(match[2])
-                };
-            }
+          updateProgress(25, 'Detecting invoice columns…', 'AI column mapping');
 
-            function containsChinese(text) {
-                return /[\u4e00-\u9fa5]/.test(text);
-            }
+          // AI column detection on orders
+          const sampleRows = ordersData.slice(0, 5).map((r) => r.join('|')).join('\n');
+          const colPrompt = `Identify column indices (0-based) in this Mrek orders data:
+${sampleRows}
 
-            async function translateChinese(text) {
-                if (!containsChinese(text)) return text;
-                try {
-                    const prompt = `Translate this Chinese shipping carrier/method name to English. Return ONLY the English translation, nothing else: "${text}"`;
-                    const response = await callOpenAI(prompt);
-                    return response.trim().replace(/["""]/g, '');
-                } catch (error) {
-                    console.error('Translation error:', error);
-                    return text;
-                }
-            }
-
-            function normalizeShippingLine(text) {
-                return text ? text.toLowerCase().replace(/^[^-]+-/, '').replace(/\s+/g, '').replace(/[()（）]/g, '') : "";
-            }
-
-            function matchShippingLine(orderLine, rateLine, orderLineEn = '', rateLineEn = '') {
-                const o = normalizeShippingLine(orderLine);
-                const r = normalizeShippingLine(rateLine);
-                const oEn = normalizeShippingLine(orderLineEn);
-                const rEn = normalizeShippingLine(rateLineEn);
-
-                return o.includes(r) || r.includes(o) ||
-                    (oEn && rEn && (oEn.includes(rEn) || rEn.includes(oEn))) ||
-                    (oEn && (oEn.includes(r) || r.includes(oEn))) ||
-                    (rEn && (o.includes(rEn) || rEn.includes(o)));
-            }
-
-            function parseRemoteRef(remoteData) {
-                remoteRules = [];
-                if (!remoteData) return;
-
-                for (let i = 1; i < remoteData.length; i++) {
-                    const row = remoteData[i];
-                    if (!row) continue;
-
-                    const carrier = (row[0] || '').toString().trim().toLowerCase();
-                    const country = (row[1] || '').toString().trim().toUpperCase();
-                    const state   = (row[2] || '').toString().trim().toUpperCase() || null;
-                    const zipStart = row[3] !== undefined && row[3] !== '' ? String(row[3]).padStart(5, '0') : null;
-                    const zipEnd   = row[4] !== undefined && row[4] !== '' ? String(row[4]).padStart(5, '0') : null;
-
-                    if (!country && !zipStart && !zipEnd) continue;
-
-                    remoteRules.push({ carrier, country, state, zipStart, zipEnd });
-                }
-            }
-
-            function inferCarrierKey(shippingLine) {
-                const lower = (shippingLine || '').toLowerCase();
-                if (lower.includes('yuntu') || lower.includes('yunexpress') || lower.includes('云途')) return 'yuntu';
-                if (lower.includes('yanwen') || lower.includes('燕文')) return 'yanwen';
-                return '';
-            }
-
-            function isRemoteAddress(order) {
-                if (!remoteRules.length) return false;
-                const country = (order.country || '').toUpperCase();
-                const state   = (order.state || '').toUpperCase();
-                const zip     = (order.postCode || '').toString().padStart(5, '0');
-                const carrierKey = inferCarrierKey(order.shippingLine);
-
-                return remoteRules.some(rule => {
-                    if (rule.carrier && carrierKey && !carrierKey.includes(rule.carrier)) return false;
-                    if (rule.country && rule.country !== country) return false;
-                    if (rule.state && rule.state !== state) return false;
-                    if (rule.zipStart && rule.zipEnd && zip >= rule.zipStart && zip <= rule.zipEnd) return true;
-                    return false;
-                });
-            }
-
-            async function analyzeOrders() {
-                document.getElementById("analyzeBtn").disabled = true;
-                document.getElementById("errorBox").classList.add("hidden");
-                document.getElementById("statusLog").innerHTML = "";
-                document.getElementById("resultsContainer").innerHTML = "";
-                document.getElementById("resultsContainer").classList.add("hidden");
-
-                try {
-                    if (!ratesData || !ordersData) throw new Error("Upload both files");
-                    const exchangeRate = parseFloat(document.getElementById("exchangeRate").value);
-                    if (isNaN(exchangeRate) || exchangeRate <= 0) throw new Error("Invalid exchange rate");
-
-                    if (remoteRefData) {
-                        parseRemoteRef(remoteRefData);
-                        addStatusLog(`Loaded ${remoteRules.length} remote rules`, "success");
-                    } else {
-                        addStatusLog("No remote reference file loaded – remote address checks limited.", "info");
-                    }
-
-                    updateProgress(5, "⚡ Parsing Rate Sheet", "Using JavaScript...");
-                    addStatusLog(`Rate sheet: ${ratesData.length} rows, Orders: ${ordersData.length} rows`);
-
-                    let shippingLineName = ratesData[1][0] ? String(ratesData[1][0]).trim() : "";
-                    addStatusLog(`Found shipping line: ${shippingLineName}`);
-
-                    let shippingLineNameEn = shippingLineName;
-                    if (containsChinese(shippingLineName)) {
-                        updateProgress(10, "🌐 Translating Chinese", "Translating shipping carrier name...");
-                        addStatusLog(`Detected Chinese in shipping line name, translating...`);
-                        shippingLineNameEn = await translateChinese(shippingLineName);
-                        addStatusLog(`Translation: "${shippingLineName}" → "${shippingLineNameEn}"`, "success");
-                    }
-
-                    const ratesByCountry = {};
-                    const countryMapping = {};
-                    let currentCountry = null;
-
-                    for (let i = 2; i < ratesData.length; i++) {
-                        const row = ratesData[i];
-                        if (!row || row.length < 7) continue;
-
-                        if (row[0] && typeof row[0] === 'string' && row[0].trim()) {
-                            currentCountry = row[0].trim();
-                            const normalized = currentCountry.toUpperCase();
-                            ratesByCountry[normalized] = [];
-                            countryMapping[normalized] = currentCountry;
-                        }
-
-                        const weightRange = row[3]; // Weight (KG)
-                        const costPerKg   = row[6]; // Shipping Cost (RMB/KG)
-                        const regFee      = row[7]; // Registration Fee (RMB/shipment)
-
-                        if (currentCountry && weightRange && costPerKg) {
-                            const weights = parseWeightRange(weightRange);
-                            if (weights) {
-                                const normalized = currentCountry.toUpperCase();
-                                ratesByCountry[normalized].push({
-                                    minWeight: weights.minWeight,
-                                    maxWeight: weights.maxWeight,
-                                    costPerKg: parseFloat(costPerKg),
-                                    regFee: parseFloat(regFee) || 0,
-                                    type: 'yuntu',
-                                    details: `${weights.minWeight}-${weights.maxWeight}kg @ ¥${costPerKg}/kg + ¥${regFee || 0} reg`
-                                });
-                            }
-                        }
-                    }
-
-                    const totalCountries = Object.keys(ratesByCountry).length;
-                    const totalBrackets = Object.values(ratesByCountry).reduce((s, b) => s + b.length, 0);
-
-                    updateProgress(20, "✅ Rate Sheet Parsed", `${totalCountries} countries, ${totalBrackets} brackets`);
-                    addStatusLog(`✅ Parsed ${totalCountries} countries with ${totalBrackets} rate brackets`, "success");
-                    if (totalBrackets === 0) throw new Error("No rate brackets found in rate sheet");
-
-                    updateProgress(25, "🤖 AI Detecting Columns", "One quick AI call...");
-                    addStatusLog("🤖 Using AI to detect order columns...");
-
-                    const orderSample = ordersData.slice(0, 3).map(r => r.join("|")).join("\n");
-                    const colPrompt = `Identify column indices (0-based) in this data:
-${orderSample}
-
-Return ONLY JSON with these keys (use -1 if not present):
+Return ONLY JSON with integer indices (or -1 if not present) for:
 {
   "orderIdCol":0,
   "countryCol":1,
@@ -843,574 +1026,643 @@ Return ONLY JSON with these keys (use -1 if not present):
   "handlingUsdCol":8,
   "handlingCnyCol":9,
   "remoteUsdCol":10,
-  "remoteCnyCol":11
+  "remoteCnyCol":11,
+  "packageNumberCol":12
 }`;
 
-                    const colResponse = await callOpenAI(colPrompt);
-                    const colMap = extractJSON(colResponse);
+          const colResponse = await callOpenAI(colPrompt);
+          const colMap = extractJSON(colResponse);
 
-                    updateProgress(40, "✅ Columns Detected", "AI analysis complete");
-                    addStatusLog(`✅ Detected: Order=${colMap.orderIdCol}, Country=${colMap.countryCol}, Weight=${colMap.weightCol}`, "success");
+          addStatusLog(`Column map detected: ${JSON.stringify(colMap)}`, 'info');
+          updateProgress(40, 'Invoice columns mapped', 'Parsing Mrek orders');
 
-                    updateProgress(45, "📊 Parsing Orders", "Extracting all order data...");
-                    addStatusLog("📊 Parsing orders with JavaScript...");
+          // Parse all orders
+          const allOrders = [];
+          const getVal = (row, idx) =>
+            idx !== undefined && idx !== null && idx >= 0 ? row[idx] : '';
 
-                    const allOrders = [];
-                    for (let i = 1; i < ordersData.length; i++) {
-                        const row = ordersData[i];
-                        if (!row || row[colMap.orderIdCol] === undefined || row[colMap.orderIdCol] === "") continue;
+          for (let i = 1; i < ordersData.length; i++) {
+            const row = ordersData[i];
+            if (!row) continue;
 
-                        const getVal = (idx) => (idx !== undefined && idx !== null && idx >= 0) ? row[idx] : "";
+            const orderId = (getVal(row, colMap.orderIdCol) || '').toString().trim();
+            if (!orderId) continue;
 
-                        const orderId       = String(getVal(colMap.orderIdCol) || "").trim();
-                        const country       = String(getVal(colMap.countryCol) || "").trim();
-                        const totalWeight   = parseFloat(getVal(colMap.weightCol)) || 0;
-                        const chargedCNY    = parseFloat(getVal(colMap.cnyCostCol)) || 0;
-                        const chargedUSD    = parseFloat(getVal(colMap.usdCostCol)) || 0;
-                        const shippingLine  = String(getVal(colMap.shippingLineCol) || "").trim();
-                        const state         = String(getVal(colMap.stateCol) || "").trim();
-                        const postCode      = String(getVal(colMap.postCodeCol) || "").trim();
+            const country = (getVal(row, colMap.countryCol) || '').toString().trim();
+            const totalWeight = parseFloat(getVal(row, colMap.weightCol)) || 0;
+            const chargedCNY = parseFloat(getVal(row, colMap.cnyCostCol)) || 0;
+            const chargedUSD = parseFloat(getVal(row, colMap.usdCostCol)) || 0;
+            const shippingLine = (getVal(row, colMap.shippingLineCol) || '').toString().trim();
+            const state = (getVal(row, colMap.stateCol) || '').toString().trim();
+            const postCode = (getVal(row, colMap.postCodeCol) || '').toString().trim();
 
-                        const handlingUSD   = parseFloat(getVal(colMap.handlingUsdCol)) || 0;
-                        const handlingCNY   = parseFloat(getVal(colMap.handlingCnyCol)) || 0;
-                        const remoteUSD     = parseFloat(getVal(colMap.remoteUsdCol)) || 0;
-                        const remoteCNY     = parseFloat(getVal(colMap.remoteCnyCol)) || 0;
+            const handlingUSD = parseFloat(getVal(row, colMap.handlingUsdCol)) || 0;
+            const handlingCNY = parseFloat(getVal(row, colMap.handlingCnyCol)) || 0;
+            const remoteUSD = parseFloat(getVal(row, colMap.remoteUsdCol)) || 0;
+            const remoteCNY = parseFloat(getVal(row, colMap.remoteCnyCol)) || 0;
 
-                        allOrders.push({
-                            orderId,
-                            country,
-                            totalWeight,
-                            chargedCNY,
-                            chargedUSD,
-                            shippingLine,
-                            state,
-                            postCode,
-                            handlingUSD,
-                            handlingCNY,
-                            remoteUSD,
-                            remoteCNY
-                        });
-                    }
+            const packageNumber = (getVal(row, colMap.packageNumberCol) || '').toString().trim();
 
-                    updateProgress(50, "✅ Orders Parsed", `${allOrders.length} orders ready`);
-                    addStatusLog(`✅ Parsed ${allOrders.length} valid orders from ${ordersData.length} rows`, "success");
-
-                    updateProgress(55, "⚡ Matching Orders", "Processing...");
-                    addStatusLog("⚡ Matching orders to rates...");
-
-                    const results = { overcharge: [], undercharge: [], accurate: [], invalid: [], missingCarriers: [], remoteOrders: [] };
-                    const total = allOrders.length;
-                    const missingCarrierMap = new Map();
-                    const translationCache = new Map();
-
-                    for (let i = 0; i < total; i++) {
-                        const order = allOrders[i];
-
-                        if (i % 100 === 0) {
-                            const percent = 55 + (i / total) * 40;
-                            updateProgress(percent, "⚡ Processing", `${i}/${total} orders (${Math.round(i/total*100)}%)`);
-                        }
-
-                        let orderShippingLineEn = order.shippingLine;
-                        if (containsChinese(order.shippingLine)) {
-                            if (translationCache.has(order.shippingLine)) {
-                                orderShippingLineEn = translationCache.get(order.shippingLine);
-                            } else {
-                                orderShippingLineEn = await translateChinese(order.shippingLine);
-                                translationCache.set(order.shippingLine, orderShippingLineEn);
-                                addStatusLog(`Translated order carrier: "${order.shippingLine}" → "${orderShippingLineEn}"`);
-                            }
-                        }
-
-                        if (!matchShippingLine(order.shippingLine, shippingLineName, orderShippingLineEn, shippingLineNameEn)) {
-                            const carrierKey = containsChinese(order.shippingLine)
-                                ? `${order.shippingLine} (${orderShippingLineEn})`
-                                : order.shippingLine;
-
-                            if (!missingCarrierMap.has(carrierKey)) {
-                                missingCarrierMap.set(carrierKey, []);
-                            }
-                            missingCarrierMap.get(carrierKey).push(order.orderId);
-
-                            const rateCarrierDisplay = containsChinese(shippingLineName)
-                                ? `${shippingLineName} (${shippingLineNameEn})`
-                                : shippingLineName;
-
-                            results.invalid.push({
-                                ...order,
-                                reason: `Shipping carrier/method mismatch`,
-                                details: `Order uses shipping carrier "${carrierKey}" which doesn't match the rate sheet carrier "${rateCarrierDisplay}".`,
-                                expectedCNY: "N/A",
-                                expectedUSD: "N/A",
-                                difference: "N/A",
-                                bracket: "N/A"
-                            });
-                            continue;
-                        }
-
-                        const normalizedCountry = order.country.toUpperCase();
-                        const countryRates = ratesByCountry[normalizedCountry];
-                        if (!countryRates || countryRates.length === 0) {
-                            let errorReason, errorDetails;
-                            if (!order.country || order.country.trim() === "") {
-                                errorReason = "Missing country information";
-                                errorDetails = "No country specified for this order.";
-                            } else {
-                                errorReason = `Country "${order.country}" not found in rate sheet`;
-                                errorDetails = `Destination "${order.country}" has no rates in this sheet.`;
-                            }
-                            results.invalid.push({
-                                ...order,
-                                reason: errorReason,
-                                details: errorDetails,
-                                expectedCNY: "N/A",
-                                expectedUSD: "N/A",
-                                difference: "N/A",
-                                bracket: "N/A"
-                            });
-                            continue;
-                        }
-
-                        const bracket = countryRates.find(b => order.totalWeight > b.minWeight && order.totalWeight <= b.maxWeight);
-                        if (!bracket) {
-                            const availableRanges = countryRates.map(b => `${b.minWeight}-${b.maxWeight}kg`).join(', ');
-                            results.invalid.push({
-                                ...order,
-                                reason: `Weight ${order.totalWeight}kg out of range for ${order.country}`,
-                                details: `No rate for weight ${order.totalWeight}kg. Ranges: ${availableRanges}`,
-                                expectedCNY: "N/A",
-                                expectedUSD: "N/A",
-                                difference: "N/A",
-                                bracket: "N/A"
-                            });
-                            continue;
-                        }
-
-                        const expectedCNY = (order.totalWeight * bracket.costPerKg) + bracket.regFee;
-                        const expectedUSD = expectedCNY / exchangeRate;
-                        const difference = order.chargedUSD - expectedUSD;
-
-                        const addressIsRemote = isRemoteAddress(order);
-                        const remoteChargeUSD = order.remoteUSD || (order.remoteCNY ? (order.remoteCNY / exchangeRate) : 0);
-                        const handlingUSD = order.handlingUSD || (order.handlingCNY ? (order.handlingCNY / exchangeRate) : 0);
-                        const totalChargedUSD = order.chargedUSD + handlingUSD + remoteChargeUSD;
-
-                        let remoteStatus = "Not remote";
-                        if (addressIsRemote && remoteChargeUSD > 0) {
-                            remoteStatus = "✅ Remote address & surcharge charged";
-                        } else if (addressIsRemote && remoteChargeUSD === 0) {
-                            remoteStatus = "⚠ Remote address but NO surcharge charged";
-                        } else if (!addressIsRemote && remoteChargeUSD > 0) {
-                            remoteStatus = "❌ Surcharge charged but address not remote";
-                        }
-
-                        const processed = {
-                            ...order,
-                            expectedCNY: expectedCNY.toFixed(2),
-                            expectedUSD: expectedUSD.toFixed(2),
-                            difference: difference.toFixed(2),
-                            exchangeRate: exchangeRate,
-                            bracket: bracket.details,
-                            addressIsRemote,
-                            remoteChargeUSD: remoteChargeUSD.toFixed(2),
-                            handlingUSD: handlingUSD.toFixed(2),
-                            totalChargedUSD: totalChargedUSD.toFixed(2),
-                            remoteStatus
-                        };
-
-                        if (addressIsRemote || remoteChargeUSD > 0) {
-                            results.remoteOrders.push(processed);
-                        }
-
-                        if (Math.abs(difference) < 0.01) results.accurate.push(processed);
-                        else if (difference > 0) results.overcharge.push(processed);
-                        else results.undercharge.push(processed);
-                    }
-
-                    results.missingCarriers = Array.from(missingCarrierMap.entries()).map(([carrier, orderIds]) => ({
-                        carrier: carrier,
-                        orderCount: orderIds.length,
-                        orderIds: orderIds
-                    }));
-
-                    updateProgress(100, "✅ Complete!", "All orders processed");
-                    addStatusLog(`✅ DONE!`, "success");
-                    addStatusLog(`📈 Overcharged: ${results.overcharge.length} orders`, results.overcharge.length ? "error" : "success");
-                    addStatusLog(`📉 Undercharged: ${results.undercharge.length} orders`, results.undercharge.length ? "error" : "success");
-                    addStatusLog(`✓ Accurate: ${results.accurate.length} orders`, "success");
-                    addStatusLog(`⚠ Invalid: ${results.invalid.length} orders`, results.invalid.length ? "error" : "success");
-                    addStatusLog(`📍 Remote-related orders: ${results.remoteOrders.length}`, "info");
-
-                    resultsData = results;
-
-                    setTimeout(() => {
-                        document.getElementById("progressContainer").classList.add("hidden");
-                        displayResults(results);
-                    }, 1000);
-
-                } catch (error) {
-                    showError(error.message);
-                    addStatusLog(`❌ Error: ${error.message}`, "error");
-                    updateProgress(0, "❌ Error", error.message);
-                } finally {
-                    document.getElementById("analyzeBtn").disabled = false;
-                }
-            }
-
-            function generateOrderTable(orders, type) {
-                if (orders.length === 0) {
-                    return `<p style="color: #94a3b8; text-align: center; padding: 2rem;">No ${type} orders</p>`;
-                }
-
-                const isInvalid = type === 'invalid';
-
-                return `
-                    <div class="table-container">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
-                            <thead>
-                                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Order #</th>
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Country</th>
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">State/ZIP</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Weight (kg)</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Ship (USD)</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Handling (USD)</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Remote (USD)</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Total (USD)</th>
-                                    ${!isInvalid ? `
-                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Expected (USD)</th>
-                                        <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Difference</th>
-                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Bracket</th>
-                                    ` : `
-                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Shipping Carrier</th>
-                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Issue</th>
-                                    `}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${orders.map((order, idx) => `
-                                    <tr style="border-bottom: 1px solid #e5e7eb; ${idx % 2 === 0 ? 'background: #f9fafb;' : ''}">
-                                        <td style="padding: 0.75rem; font-weight: 500; color: #7c3aed;">${order.orderId}</td>
-                                        <td style="padding: 0.75rem; color: #6b7280;">${order.country}</td>
-                                        <td style="padding: 0.75rem; color: #6b7280; font-size: 0.8rem;">${order.state || ''} ${order.postCode || ''}</td>
-                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">${order.totalWeight}</td>
-                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.chargedUSD.toFixed ? order.chargedUSD.toFixed(2) : order.chargedUSD}</td>
-                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.handlingUSD || '0.00'}</td>
-                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.remoteChargeUSD || '0.00'}</td>
-                                        <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #111827;">$${order.totalChargedUSD || (order.chargedUSD || 0).toFixed?.(2) || order.chargedUSD}</td>
-                                        ${!isInvalid ? `
-                                            <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${order.expectedUSD}</td>
-                                            <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: ${parseFloat(order.difference) > 0 ? '#dc2626' : '#059669'};">
-                                                ${parseFloat(order.difference) > 0 ? '+' : ''}$${order.difference}
-                                            </td>
-                                            <td style="padding: 0.75rem; color: #6b7280; font-size: 0.75rem;">${order.bracket}</td>
-                                        ` : `
-                                            <td style="padding: 0.75rem; color: #6b7280; font-size: 0.875rem;">${order.shippingLine}</td>
-                                            <td style="padding: 0.75rem; color: #dc2626; font-size: 0.875rem; font-weight: 600;">${order.reason}</td>
-                                        `}
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            }
-
-            function generateRemoteTable(remoteOrders) {
-                if (!remoteOrders.length) {
-                    return `<p style="color: #94a3b8; text-align: center; padding: 1.5rem;">No remote-related orders found.</p>`;
-                }
-
-                return `
-                    <div class="table-container">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
-                            <thead>
-                                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Order #</th>
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Country</th>
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">State / ZIP</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Ship (USD)</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Handling (USD)</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Remote (USD)</th>
-                                    <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: #374151;">Total (USD)</th>
-                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151;">Remote Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${remoteOrders.map((o, idx) => `
-                                    <tr style="border-bottom: 1px solid #e5e7eb; ${idx % 2 === 0 ? 'background: #f9fafb;' : ''}">
-                                        <td style="padding: 0.75rem; font-weight: 500; color: #7c3aed;">${o.orderId}</td>
-                                        <td style="padding: 0.75rem; color: #6b7280;">${o.country}</td>
-                                        <td style="padding: 0.75rem; color: #6b7280; font-size: 0.8rem;">${o.state || ''} ${o.postCode || ''}</td>
-                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${o.chargedUSD.toFixed ? o.chargedUSD.toFixed(2) : o.chargedUSD}</td>
-                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${o.handlingUSD}</td>
-                                        <td style="padding: 0.75rem; text-align: right; color: #6b7280;">$${o.remoteChargeUSD}</td>
-                                        <td style="padding: 0.75rem; text-align: right; font-weight: 600; color: #111827;">$${o.totalChargedUSD}</td>
-                                        <td style="padding: 0.75rem; color:
-                                            ${o.remoteStatus.startsWith('✅') ? '#059669'
-                                            : o.remoteStatus.startsWith('⚠') ? '#d97706'
-                                            : o.remoteStatus.startsWith('❌') ? '#dc2626'
-                                            : '#6b7280'};">
-                                            ${o.remoteStatus}
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            }
-
-            function displayResults(results) {
-                const container = document.getElementById("resultsContainer");
-                container.classList.remove("hidden");
-
-                const overchargeTotal = results.overcharge.reduce((s, o) => s + parseFloat(o.difference), 0);
-                const underchargeTotal = Math.abs(results.undercharge.reduce((s, o) => s + parseFloat(o.difference), 0));
-
-                const totalOrders = results.overcharge.length + results.undercharge.length + results.accurate.length + results.invalid.length;
-                const accurateOrders = results.accurate.length;
-                const accuracyPercentage = totalOrders > 0 ? ((accurateOrders / totalOrders) * 100).toFixed(1) : 0;
-
-                const remoteMismatchCount = results.remoteOrders.filter(o =>
-                    o.remoteStatus !== "✅ Remote address & surcharge charged"
-                ).length;
-
-                const top10Overcharged = [...results.overcharge]
-                    .sort((a, b) => parseFloat(b.difference) - parseFloat(a.difference))
-                    .slice(0, 10);
-
-                resultsData = results;
-
-                container.innerHTML = `
-                    <div style="margin-bottom: 1.5rem; display: flex; justify-content: flex-end;">
-                        <button onclick="shareDashboard(event)" style="background: #2d3748; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-                            🔗 Share Dashboard Link
-                        </button>
-                    </div>
-
-                    <div class="results-grid" style="margin-bottom: 2rem;">
-                        <div class="result-card">
-                            <div class="result-header">
-                                <div class="result-icon" style="background: #fee2e2; color: #dc2626;">📈</div>
-                            </div>
-                            <h3>Overcharged</h3>
-                            <div class="result-amount" style="color: #dc2626;">$${overchargeTotal.toFixed(2)}</div>
-                            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">${results.overcharge.length} orders</div>
-                            <button class="download-btn" onclick="downloadExcel('overcharge')">📥 Download Excel</button>
-                        </div>
-                        <div class="result-card">
-                            <div class="result-header">
-                                <div class="result-icon" style="background: #d1fae5; color: #059669;">📉</div>
-                            </div>
-                            <h3>Undercharged</h3>
-                            <div class="result-amount" style="color: #059669;">$${underchargeTotal.toFixed(2)}</div>
-                            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">${results.undercharge.length} orders</div>
-                            <button class="download-btn" onclick="downloadExcel('undercharge')">📥 Download Excel</button>
-                        </div>
-                        <div class="result-card">
-                            <div class="result-header">
-                                <div class="result-icon" style="background: #fef3c7; color: #d97706;">✓</div>
-                            </div>
-                            <h3>Accurate</h3>
-                            <div class="result-amount" style="color: #d97706;">${results.accurate.length}</div>
-                            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 1rem;">orders correctly charged</div>
-                            <button class="download-btn" onclick="downloadExcel('accurate')">📥 Download Excel</button>
-                        </div>
-                        <div class="result-card">
-                            <div class="result-header">
-                                <div class="result-icon" style="background: #e0f2fe; color: #0369a1;">📍</div>
-                            </div>
-                            <h3>Remote-Related Orders</h3>
-                            <div class="result-amount" style="color: #0369a1;">${results.remoteOrders.length}</div>
-                            <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;">
-                                ${remoteMismatchCount === 0
-                                    ? "All remote surcharges match remote addresses."
-                                    : `${remoteMismatchCount} with mismatch between address & surcharge.`}
-                            </div>
-                            <button class="download-btn" onclick="downloadExcel('remoteOrders')">📥 Download Remote Orders</button>
-                        </div>
-                    </div>
-
-                    <div class="card" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; margin-bottom: 2rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <h2 style="color: #92400e; margin-bottom: 0.5rem;">Overall Accuracy</h2>
-                                <p style="color: #78350f; font-size: 0.875rem;">${accurateOrders} out of ${totalOrders} orders were correctly charged</p>
-                            </div>
-                            <div style="font-size: 3rem; font-weight: 800; color: #d97706;">${accuracyPercentage}%</div>
-                        </div>
-                    </div>
-
-                    <div class="card" style="margin-bottom: 2rem;">
-                        <h2 style="color: #1f2937; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="font-size: 1.5rem;">📍</span> Remote Address & Surcharge Audit
-                        </h2>
-                        <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 1rem;">
-                            This table shows all orders where either the address is remote <strong>or</strong> a remote surcharge was charged.
-                            You can quickly see if surcharge logic matches the actual address.
-                        </p>
-                        ${generateRemoteTable(results.remoteOrders)}
-                    </div>
-
-                    <div class="card" style="margin-bottom: 2rem;">
-                        <h2 style="color: #1e293b; margin-bottom: 1.5rem;">📊 All Orders - Detailed View</h2>
-                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
-                            <button onclick="switchTab('overcharge')" id="tab-overcharge" class="tab-btn active">
-                                Overcharged (${results.overcharge.length})
-                            </button>
-                            <button onclick="switchTab('undercharge')" id="tab-undercharge" class="tab-btn">
-                                Undercharged (${results.undercharge.length})
-                            </button>
-                            <button onclick="switchTab('accurate')" id="tab-accurate" class="tab-btn">
-                                Accurate (${results.accurate.length})
-                            </button>
-                            <button onclick="switchTab('invalid')" id="tab-invalid" class="tab-btn">
-                                Invalid (${results.invalid.length})
-                            </button>
-                        </div>
-                        <div class="tab-content" id="content-overcharge" style="display: block;">
-                            ${generateOrderTable(results.overcharge, 'overcharge')}
-                        </div>
-                        <div class="tab-content" id="content-undercharge" style="display: none;">
-                            ${generateOrderTable(results.undercharge, 'undercharge')}
-                        </div>
-                        <div class="tab-content" id="content-accurate" style="display: none;">
-                            ${generateOrderTable(results.accurate, 'accurate')}
-                        </div>
-                        <div class="tab-content" id="content-invalid" style="display: none;">
-                            ${generateOrderTable(results.invalid, 'invalid')}
-                        </div>
-                    </div>
-                `;
-            }
-
-            function switchTab(tabName) {
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.style.display = 'none';
-                });
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.getElementById(`content-${tabName}`).style.display = 'block';
-                document.getElementById(`tab-${tabName}`).classList.add('active');
-            }
-
-            async function downloadExcel(type) {
-                const data = type === 'remoteOrders' ? resultsData.remoteOrders : resultsData[type];
-                if (!data || !data.length) {
-                    alert("No data available for download");
-                    return;
-                }
-
-                const workbook = new ExcelJS.Workbook();
-                const worksheet = workbook.addWorksheet(type.charAt(0).toUpperCase() + type.slice(1));
-
-                const isInvalid = type === 'invalid';
-
-                const headers = isInvalid
-                    ? ['Order ID', 'Country', 'State', 'ZIP', 'Weight (kg)', 'Charged CNY', 'Charged USD', 'Shipping Carrier', 'Issue', 'Details']
-                    : ['Order ID', 'Country', 'State', 'ZIP', 'Weight (kg)', 'Ship CNY', 'Ship USD', 'Handling USD', 'Remote USD', 'Total USD', 'Expected CNY', 'Expected USD', 'Difference USD', 'Bracket', 'Remote Status', 'Shipping Line'];
-
-                const headerRow = worksheet.addRow(headers);
-                headerRow.font = { bold: true };
-
-                data.forEach(order => {
-                    if (isInvalid) {
-                        worksheet.addRow([
-                            order.orderId,
-                            order.country,
-                            order.state || '',
-                            order.postCode || '',
-                            order.totalWeight,
-                            order.chargedCNY,
-                            order.chargedUSD,
-                            order.shippingLine,
-                            order.reason || '',
-                            order.details || ''
-                        ]);
-                    } else {
-                        worksheet.addRow([
-                            order.orderId,
-                            order.country,
-                            order.state || '',
-                            order.postCode || '',
-                            order.totalWeight,
-                            order.chargedCNY,
-                            order.chargedUSD,
-                            order.handlingUSD,
-                            order.remoteChargeUSD,
-                            order.totalChargedUSD,
-                            order.expectedCNY,
-                            order.expectedUSD,
-                            order.difference,
-                            order.bracket,
-                            order.remoteStatus,
-                            order.shippingLine
-                        ]);
-                    }
-                });
-
-                const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${type}_orders.xlsx`;
-                a.click();
-                URL.revokeObjectURL(url);
-            }
-
-            function shareDashboard(event) {
-                if (!resultsData) {
-                    alert("No results to share");
-                    return;
-                }
-
-                const dataStr = JSON.stringify(resultsData);
-                const base64Data = btoa(encodeURIComponent(dataStr));
-                const url = new URL(window.location.href.split('#')[0]);
-                url.hash = 'results=' + base64Data;
-
-                navigator.clipboard.writeText(url.toString()).then(() => {
-                    const btn = event.target.closest('button');
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = '✅ Link Copied to Clipboard!';
-                    btn.style.background = '#059669';
-
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.style.background = '#2d3748';
-                    }, 3000);
-                }).catch(err => {
-                    prompt("Copy this link to share:", url.toString());
-                });
-
-                window.history.pushState({}, '', url);
-            }
-
-            function loadResultsFromURL() {
-                const hash = window.location.hash;
-                if (!hash || !hash.includes('results=')) return;
-
-                try {
-                    const base64Data = hash.split('results=')[1];
-                    const dataStr = decodeURIComponent(atob(base64Data));
-                    const results = JSON.parse(dataStr);
-
-                    resultsData = results;
-                    displayResults(results);
-                    document.querySelector('.card').style.display = 'none';
-                    document.getElementById('resultsContainer').classList.remove('hidden');
-                } catch (error) {
-                    console.error('Failed to load results from URL:', error);
-                }
-            }
-
-            window.addEventListener('DOMContentLoaded', () => {
-                loadFromURL();
-                loadResultsFromURL();
+            allOrders.push({
+              orderId,
+              country,
+              totalWeight,
+              chargedCNY,
+              chargedUSD,
+              shippingLine,
+              state,
+              postCode,
+              handlingUSD,
+              handlingCNY,
+              remoteUSD,
+              remoteCNY,
+              packageNumber,
             });
-        </script>
-    </body>
+          }
+
+          updateProgress(55, 'Orders parsed', `${allOrders.length} orders ready for audit`);
+          addStatusLog(`${allOrders.length} orders will be audited.`, 'success');
+
+          // Match orders to rates & remote logic
+          const results = {
+            overcharge: [],
+            undercharge: [],
+            accurate: [],
+            invalid: [],
+            remoteOrders: [],
+          };
+
+          const total = allOrders.length;
+          for (let i = 0; i < total; i++) {
+            const order = allOrders[i];
+            if (i % 100 === 0) {
+              const pct = 55 + (i / total) * 35;
+              updateProgress(pct, 'Auditing orders…', `${i}/${total} processed`);
+            }
+
+            const countryKey = (order.country || '').toUpperCase();
+            const countryRates = ratesByCountry[countryKey];
+
+            if (!countryRates || !countryRates.length) {
+              results.invalid.push({
+                ...order,
+                reason: `No rate row for country "${order.country}" in selected rate file`,
+              });
+              continue;
+            }
+
+            const bracket = countryRates.find(
+              (b) => order.totalWeight > b.minWeight && order.totalWeight <= b.maxWeight
+            );
+            if (!bracket) {
+              const ranges = countryRates.map((b) => `${b.minWeight}-${b.maxWeight}`).join(', ');
+              results.invalid.push({
+                ...order,
+                reason: `Weight ${order.totalWeight}kg out of range for ${order.country}. Available ranges: ${ranges}`,
+              });
+              continue;
+            }
+
+            const expectedCNY = order.totalWeight * bracket.costPerKg + bracket.fixedFee;
+            const expectedUSD = expectedCNY / exchangeRate;
+            const diff = order.chargedUSD - expectedUSD;
+
+            // Remote logic
+            const addressIsRemote = isAddressRemote(order);
+            const mrekRemoteUSD =
+              order.remoteUSD || (order.remoteCNY ? order.remoteCNY / exchangeRate : 0);
+            const mrekChargedRemote = mrekRemoteUSD > 0.01;
+
+            let carrierRemoteRMB = 0;
+            if (order.packageNumber && remoteSurchargeMap[order.packageNumber]) {
+              carrierRemoteRMB = remoteSurchargeMap[order.packageNumber];
+            }
+            const carrierRemoteUSD = carrierRemoteRMB / exchangeRate;
+            const carrierChargedRemote = carrierRemoteUSD > 0.01;
+
+            const handlingUSD =
+              order.handlingUSD || (order.handlingCNY ? order.handlingCNY / exchangeRate : 0);
+            const totalChargedUSD = order.chargedUSD + handlingUSD + mrekRemoteUSD;
+
+            let remoteStatus = 'Not remote';
+            if (addressIsRemote && carrierChargedRemote && mrekChargedRemote) {
+              remoteStatus = '✅ Remote address & remote charged (Carrier + Mrek)';
+            } else if (addressIsRemote && !carrierChargedRemote && !mrekChargedRemote) {
+              remoteStatus = '⚠ Remote address but no remote fee charged';
+            } else if (!addressIsRemote && (carrierChargedRemote || mrekChargedRemote)) {
+              remoteStatus = '❌ Remote surcharge charged but address not in remote rules';
+            } else if (addressIsRemote && carrierChargedRemote && !mrekChargedRemote) {
+              remoteStatus =
+                '⚠ Carrier charged remote, Mrek did NOT pass it (you are absorbing the cost)';
+            } else if (addressIsRemote && !carrierChargedRemote && mrekChargedRemote) {
+              remoteStatus =
+                '❌ Mrek charged remote but carrier log shows no remote surcharge for this package';
+            }
+
+            const processed = {
+              ...order,
+              expectedCNY: expectedCNY.toFixed(2),
+              expectedUSD: expectedUSD.toFixed(2),
+              difference: diff.toFixed(2),
+              bracket: bracket.details,
+              exchangeRate,
+              addressIsRemote,
+              mrekRemoteUSD: mrekRemoteUSD.toFixed(2),
+              carrierRemoteUSD: carrierRemoteUSD.toFixed(2),
+              handlingUSD: handlingUSD.toFixed(2),
+              totalChargedUSD: totalChargedUSD.toFixed(2),
+              remoteStatus,
+            };
+
+            if (addressIsRemote || carrierChargedRemote || mrekChargedRemote) {
+              results.remoteOrders.push(processed);
+            }
+
+            if (isNaN(diff)) {
+              results.invalid.push({
+                ...processed,
+                reason: 'Invalid difference calculation (NaN)',
+              });
+            } else if (Math.abs(diff) < 0.01) {
+              results.accurate.push(processed);
+            } else if (diff > 0) {
+              results.overcharge.push(processed);
+            } else {
+              results.undercharge.push(processed);
+            }
+          }
+
+          updateProgress(95, 'Finalizing…', 'Building dashboard');
+          resultsData = results;
+          renderDashboard(results, rateMeta.name, shippingLineNameGuess);
+          updateProgress(100, 'Audit complete', 'Done');
+        } catch (err) {
+          console.error(err);
+          showError(err.message || 'Unknown error');
+          addStatusLog(`Error: ${err.message}`, 'error');
+          updateProgress(0, 'Error', err.message);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // === DASHBOARD RENDER ===
+      function renderDashboard(results, rateFileName, shippingLineNameGuess) {
+        const container = document.getElementById('resultsContainer');
+        container.classList.remove('hidden');
+
+        const totalOrders =
+          results.overcharge.length +
+          results.undercharge.length +
+          results.accurate.length +
+          results.invalid.length;
+        const accurateOrders = results.accurate.length;
+        const overchargeTotal = results.overcharge.reduce(
+          (sum, o) => sum + parseFloat(o.difference),
+          0
+        );
+        const underchargeTotal = Math.abs(
+          results.undercharge.reduce((sum, o) => sum + parseFloat(o.difference), 0)
+        );
+
+        const accuracyPct = totalOrders ? ((accurateOrders / totalOrders) * 100).toFixed(1) : '0.0';
+
+        const remoteMismatchCount = results.remoteOrders.filter((o) =>
+          o.remoteStatus.startsWith('❌')
+        ).length;
+
+        const remoteWarnCount = results.remoteOrders.filter((o) =>
+          o.remoteStatus.startsWith('⚠')
+        ).length;
+
+        container.innerHTML = `
+          <div class="card">
+            <div class="dashboard-header-row">
+              <div class="dashboard-title-wrap">
+                <div class="dashboard-title">Audit Results</div>
+                <div class="dashboard-subtitle">
+                  Rate file: <strong>${rateFileName}</strong> · Shipping line guess: <strong>${shippingLineNameGuess}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="summary-grid">
+              <div class="summary-card">
+                <div class="summary-label">Orders Audited</div>
+                <div class="summary-value">${totalOrders}</div>
+                <div class="summary-meta">
+                  <span class="badge success">Accurate: ${accurateOrders}</span>
+                </div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-label">Total Overcharge</div>
+                <div class="summary-value">$${overchargeTotal.toFixed(2)}</div>
+                <div class="summary-meta">On ${results.overcharge.length} orders</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-label">Total Undercharge</div>
+                <div class="summary-value">$${underchargeTotal.toFixed(2)}</div>
+                <div class="summary-meta">On ${results.undercharge.length} orders</div>
+              </div>
+              <div class="summary-card">
+                <div class="summary-label">Remote & Surcharges</div>
+                <div class="summary-value">${results.remoteOrders.length}</div>
+                <div class="summary-meta">
+                  <span class="badge ${
+                    remoteMismatchCount === 0 && remoteWarnCount === 0
+                      ? 'success'
+                      : remoteMismatchCount > 0
+                      ? 'error'
+                      : 'warn'
+                  }">
+                    ${
+                      remoteMismatchCount === 0 && remoteWarnCount === 0
+                        ? 'All consistent'
+                        : remoteMismatchCount > 0
+                        ? `${remoteMismatchCount} hard mismatches`
+                        : `${remoteWarnCount} warnings`
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="two-col-main" style="margin-bottom: 1.5rem;">
+              <div class="card" style="box-shadow:none;border-radius:14px;">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Charge Accuracy</div>
+                    <div class="card-subtitle">Distribution of over/under/accurate/invalid</div>
+                  </div>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="accuracyChart"></canvas>
+                </div>
+              </div>
+              <div class="card" style="box-shadow:none;border-radius:14px;">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Remote Status</div>
+                    <div class="card-subtitle">How remote surcharges align with addresses</div>
+                  </div>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="remoteChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="two-col-main">
+              <div class="card" style="box-shadow:none;border-radius:14px;">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Orders by Charge Type</div>
+                    <div class="card-subtitle">Filter by overcharged, undercharged, accurate, invalid</div>
+                  </div>
+                  <div class="pill-filter">
+                    <button class="pill-btn active" data-filter="all" onclick="switchOrdersFilter(event, 'all')">
+                      All <span class="pill-badge">${totalOrders}</span>
+                    </button>
+                    <button class="pill-btn" data-filter="overcharge" onclick="switchOrdersFilter(event, 'overcharge')">
+                      Overcharged <span class="pill-badge">${results.overcharge.length}</span>
+                    </button>
+                    <button class="pill-btn" data-filter="undercharge" onclick="switchOrdersFilter(event, 'undercharge')">
+                      Undercharged <span class="pill-badge">${results.undercharge.length}</span>
+                    </button>
+                    <button class="pill-btn" data-filter="accurate" onclick="switchOrdersFilter(event, 'accurate')">
+                      Accurate <span class="pill-badge">${results.accurate.length}</span>
+                    </button>
+                    <button class="pill-btn" data-filter="invalid" onclick="switchOrdersFilter(event, 'invalid')">
+                      Invalid <span class="pill-badge">${results.invalid.length}</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="table-container" id="ordersTableContainer">
+                  ${renderOrdersTable('all', results)}
+                </div>
+              </div>
+
+              <div class="card" style="box-shadow:none;border-radius:14px;">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Remote Audit Table</div>
+                    <div class="card-subtitle">One row per remote-related order</div>
+                  </div>
+                  <button class="pill-btn" onclick="downloadExcel('remoteOrders')">
+                    ⬇ Download Remote Orders
+                  </button>
+                </div>
+                <div class="table-container">
+                  ${renderRemoteTable(results.remoteOrders)}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Render charts
+        renderCharts(results, accuracyPct);
+      }
+
+      function renderOrdersTable(filter, results) {
+        let rows = [];
+        if (filter === 'all') {
+          rows = [
+            ...results.overcharge,
+            ...results.undercharge,
+            ...results.accurate,
+            ...results.invalid,
+          ];
+        } else {
+          rows = results[filter] || [];
+        }
+
+        if (!rows.length) {
+          return `<p style="padding:1rem;font-size:0.85rem;color:#9ca3af;">No orders for this filter.</p>`;
+        }
+
+        const header = `
+          <table>
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Country</th>
+                <th>State / ZIP</th>
+                <th>Weight (kg)</th>
+                <th>Ship (USD)</th>
+                <th>Handling (USD)</th>
+                <th>Remote (USD)</th>
+                <th>Total (USD)</th>
+                <th>Expected (USD)</th>
+                <th>Diff</th>
+                <th>Bracket</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        const body = rows
+          .map((o) => {
+            const diffVal = parseFloat(o.difference);
+            const diffColor =
+              diffVal > 0 ? '#b91c1c' : diffVal < 0 ? '#15803d' : '#111827';
+            const diffLabel = diffVal > 0 ? '+' + o.difference : o.difference;
+            return `
+              <tr>
+                <td>${o.orderId}</td>
+                <td>${o.country || ''}</td>
+                <td>${(o.state || '') + ' ' + (o.postCode || '')}</td>
+                <td>${o.totalWeight}</td>
+                <td>$${o.chargedUSD.toFixed ? o.chargedUSD.toFixed(2) : o.chargedUSD}</td>
+                <td>$${o.handlingUSD || '0.00'}</td>
+                <td>$${o.mrekRemoteUSD || '0.00'}</td>
+                <td>$${o.totalChargedUSD || '0.00'}</td>
+                <td>$${o.expectedUSD || '0.00'}</td>
+                <td style="color:${diffColor};font-weight:600;">${diffLabel}</td>
+                <td>${o.bracket || ''}</td>
+              </tr>
+            `;
+          })
+          .join('');
+        return header + body + '</tbody></table>';
+      }
+
+      function renderRemoteTable(remoteOrders) {
+        if (!remoteOrders.length) {
+          return `<p style="padding:1rem;font-size:0.85rem;color:#9ca3af;">No remote-related orders found.</p>`;
+        }
+        const rows = remoteOrders
+          .map((o) => {
+            let chipClass = 'chip-remote-ok';
+            if (o.remoteStatus.startsWith('❌')) chipClass = 'chip-remote-bad';
+            else if (o.remoteStatus.startsWith('⚠')) chipClass = 'chip-remote-warn';
+
+            return `
+              <tr>
+                <td>${o.orderId}</td>
+                <td>${o.country}</td>
+                <td>${(o.state || '') + ' ' + (o.postCode || '')}</td>
+                <td>$${o.chargedUSD.toFixed ? o.chargedUSD.toFixed(2) : o.chargedUSD}</td>
+                <td>$${o.handlingUSD}</td>
+                <td>$${o.mrekRemoteUSD}</td>
+                <td>$${o.carrierRemoteUSD}</td>
+                <td>$${o.totalChargedUSD}</td>
+                <td>
+                  <span class="chip ${chipClass}">
+                    ${o.remoteStatus}
+                  </span>
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+        return `
+          <table>
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Country</th>
+                <th>State / ZIP</th>
+                <th>Ship (USD)</th>
+                <th>Handling (USD)</th>
+                <th>Mrek Remote (USD)</th>
+                <th>Carrier Remote (USD)</th>
+                <th>Total (USD)</th>
+                <th>Remote Status</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      }
+
+      function renderCharts(results, accuracyPct) {
+        const ctx1 = document.getElementById('accuracyChart').getContext('2d');
+        const ctx2 = document.getElementById('remoteChart').getContext('2d');
+
+        const accData = {
+          labels: ['Overcharged', 'Undercharged', 'Accurate', 'Invalid'],
+          datasets: [
+            {
+              data: [
+                results.overcharge.length,
+                results.undercharge.length,
+                results.accurate.length,
+                results.invalid.length,
+              ],
+              backgroundColor: ['#f97316', '#22c55e', '#0ea5e9', '#9ca3af'],
+            },
+          ],
+        };
+
+        new Chart(ctx1, {
+          type: 'doughnut',
+          data: accData,
+          options: {
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { boxWidth: 14, font: { size: 11 } },
+              },
+              tooltip: { enabled: true },
+            },
+            cutout: '60%',
+          },
+        });
+
+        const remoteOk = results.remoteOrders.filter((o) =>
+          o.remoteStatus.startsWith('✅')
+        ).length;
+        const remoteWarn = results.remoteOrders.filter((o) =>
+          o.remoteStatus.startsWith('⚠')
+        ).length;
+        const remoteBad = results.remoteOrders.filter((o) =>
+          o.remoteStatus.startsWith('❌')
+        ).length;
+        const remoteNone = results.remoteOrders.filter((o) =>
+          o.remoteStatus === 'Not remote'
+        ).length;
+
+        new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: ['OK', 'Warnings', 'Mismatches', 'Other remote'],
+            datasets: [
+              {
+                data: [remoteOk, remoteWarn, remoteBad, remoteNone],
+                backgroundColor: ['#22c55e', '#eab308', '#ef4444', '#94a3b8'],
+              },
+            ],
+          },
+          options: {
+            plugins: {
+              legend: { display: false },
+              tooltip: { enabled: true },
+            },
+            scales: {
+              x: {
+                ticks: { font: { size: 11 } },
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1, font: { size: 11 } },
+              },
+            },
+          },
+        });
+      }
+
+      function switchOrdersFilter(evt, filter) {
+        const buttons = document.querySelectorAll('.pill-btn[data-filter]');
+        buttons.forEach((btn) => btn.classList.remove('active'));
+        evt.currentTarget.classList.add('active');
+
+        if (!resultsData) return;
+        const container = document.getElementById('ordersTableContainer');
+        container.innerHTML = renderOrdersTable(filter, resultsData);
+      }
+
+      async function downloadExcel(type) {
+        if (!resultsData) {
+          alert('No results to download yet.');
+          return;
+        }
+        const data =
+          type === 'remoteOrders' ? resultsData.remoteOrders : resultsData[type] || [];
+        if (!data.length) {
+          alert('No data available for this export.');
+          return;
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet(type);
+
+        const isInvalid = type === 'invalid';
+
+        const headers = isInvalid
+          ? [
+              'Order ID',
+              'Country',
+              'State',
+              'ZIP',
+              'Weight (kg)',
+              'Ship CNY',
+              'Ship USD',
+              'Shipping Method',
+              'Reason',
+            ]
+          : [
+              'Order ID',
+              'Country',
+              'State',
+              'ZIP',
+              'Weight (kg)',
+              'Ship CNY',
+              'Ship USD',
+              'Handling USD',
+              'Mrek Remote USD',
+              'Carrier Remote USD',
+              'Total USD',
+              'Expected CNY',
+              'Expected USD',
+              'Diff USD',
+              'Bracket',
+              'Remote Status',
+              'Shipping Method',
+            ];
+
+        worksheet.addRow(headers).font = { bold: true };
+
+        data.forEach((o) => {
+          if (isInvalid) {
+            worksheet.addRow([
+              o.orderId,
+              o.country || '',
+              o.state || '',
+              o.postCode || '',
+              o.totalWeight,
+              o.chargedCNY || 0,
+              o.chargedUSD || 0,
+              o.shippingLine || '',
+              o.reason || '',
+            ]);
+          } else {
+            worksheet.addRow([
+              o.orderId,
+              o.country || '',
+              o.state || '',
+              o.postCode || '',
+              o.totalWeight,
+              o.chargedCNY || 0,
+              o.chargedUSD || 0,
+              o.handlingUSD || 0,
+              o.mrekRemoteUSD || 0,
+              o.carrierRemoteUSD || 0,
+              o.totalChargedUSD || 0,
+              o.expectedCNY || 0,
+              o.expectedUSD || 0,
+              o.difference || 0,
+              o.bracket || '',
+              o.remoteStatus || '',
+              o.shippingLine || '',
+            ]);
+          }
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${type}_audit.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        // No URL memory for now, just a clean load.
+      });
+    </script>
+  </body>
 </html>
