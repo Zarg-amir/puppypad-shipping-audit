@@ -475,7 +475,7 @@
                   <div>
                     <div class="file-label-main">Upload Mrek invoice (orders) Excel</div>
                     <div class="file-label-sub">
-                      Must include order ID, shipping method, weight, shipping cost, handling & remote.
+                      Must include order ID, shipping method, weight, shipping cost, handling, remote.
                     </div>
                   </div>
                 </div>
@@ -522,8 +522,7 @@
                 the amount. The app compares this to Mrek's invoice.
                 <br />
                 <strong>Note:</strong> If you upload a PDF here, the audit still runs, but carrier
-                remote fees cannot be auto-read. To fully validate carrier vs Mrek remote amounts,
-                export this report as Excel/CSV from the carrier and upload that instead.
+                remote fees cannot be auto-read. Export it as Excel/CSV for full comparison.
               </p>
             </div>
 
@@ -664,7 +663,6 @@
           label.textContent = file.name;
 
           if (remoteSurchargeIsPdf) {
-            // We can't parse PDF tables reliably here.
             remoteSurchargeData = null;
             remoteSurchargeMap = {};
             addStatusLog(
@@ -680,56 +678,129 @@
             const wb = XLSX.read(data, { type: 'array' });
             const sheet = wb.Sheets[wb.SheetNames[0]];
             remoteSurchargeData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-            remoteSurchargeMap = {}; // will fill when analyzing
+            remoteSurchargeMap = {};
           };
           reader.readAsArrayBuffer(file);
         }
       }
 
       // ========= RATE SHEETS =========
+      const CN_COUNTRY_MAP = {
+        '美国': 'UNITED STATES',
+        '英国': 'UNITED KINGDOM',
+        '法国': 'FRANCE',
+        '德国': 'GERMANY',
+        '意大利': 'ITALY',
+        '西班牙': 'SPAIN',
+        '荷兰': 'NETHERLANDS',
+        '丹麦': 'DENMARK',
+        '瑞典': 'SWEDEN',
+        '挪威': 'NORWAY',
+        '奥地利': 'AUSTRIA',
+        '加拿大': 'CANADA',
+        '澳大利亚': 'AUSTRALIA',
+        '新西兰': 'NEW ZEALAND',
+        '葡萄牙': 'PORTUGAL',
+        '比利时': 'BELGIUM'
+      };
+
+      function normalizeCountry(val) {
+        if (val === undefined || val === null) return null;
+        const s = val.toString().trim();
+        if (!s) return null;
+        if (CN_COUNTRY_MAP[s]) return CN_COUNTRY_MAP[s];
+        return s.toUpperCase();
+      }
+
       function parseWeightRange(rangeStr) {
         if (!rangeStr) return null;
-        const match = rangeStr.toString().match(/([\d.]+)[＜<].*?[≤<=]([\d.]+)/);
-        if (!match) return null;
-        return {
-          minWeight: parseFloat(match[1]),
-          maxWeight: parseFloat(match[2])
-        };
+        const s = rangeStr.toString().trim();
+        // YunTu style: 0＜W≤0.1
+        let m = s.match(/([\d.]+)[＜<].*?[≤<=]([\d.]+)/);
+        if (m) {
+          return { minWeight: parseFloat(m[1]), maxWeight: parseFloat(m[2]) };
+        }
+        // Yanwen style: 0.001 - 0.1
+        m = s.match(/([\d.]+)\s*-\s*([\d.]+)/);
+        if (m) {
+          return { minWeight: parseFloat(m[1]), maxWeight: parseFloat(m[2]) };
+        }
+        return null;
       }
 
       function parseRateSheet(jsonData) {
-        // Generic YunTu-style: Country in col0, Weight(KG) col3, RMB/kg col6, fee col7
+        const firstCell = (jsonData[0] && jsonData[0][0]) ? jsonData[0][0].toString() : '';
+        const isYanwen = firstCell.includes('Yanwen-') || firstCell.includes('燕文');
         const ratesByCountry = {};
         let currentCountry = null;
 
-        for (let i = 2; i < jsonData.length; i++) {
-          const row = jsonData[i];
-          if (!row || row.length < 7) continue;
+        if (isYanwen) {
+          // Yanwen General Goods / Airline style:
+          // row1: continent / country / CountryCode / cost/kg / processing fee / weight range / min billable...
+          for (let i = 2; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row || row.length < 6) continue;
 
-          if (row[0] && typeof row[0] === 'string' && row[0].trim()) {
-            currentCountry = row[0].toString().trim();
-            const normalized = currentCountry.toUpperCase();
-            if (!ratesByCountry[normalized]) ratesByCountry[normalized] = [];
+            const countryCell = row[1]; // "country" or Chinese name
+            if (countryCell && countryCell !== 'country') {
+              const nc = normalizeCountry(countryCell);
+              if (nc) {
+                currentCountry = nc;
+                if (!ratesByCountry[currentCountry]) ratesByCountry[currentCountry] = [];
+              }
+            }
+            if (!currentCountry) continue;
+
+            const costPerKg = row[3];   // Shipping cost per kilogram (RMB/KG)
+            const procFee   = row[4];   // Processing fee (RMB/item)
+            const rangeCell = row[5];   // Weight range (KG)
+            if (rangeCell && costPerKg !== undefined && costPerKg !== '') {
+              const parsed = parseWeightRange(rangeCell);
+              if (parsed) {
+                ratesByCountry[currentCountry].push({
+                  minWeight: parsed.minWeight,
+                  maxWeight: parsed.maxWeight,
+                  costPerKg: parseFloat(costPerKg),
+                  fixedFee: parseFloat(procFee) || 0, // treat processing fee as fixed per shipment
+                  details: `${parsed.minWeight}-${parsed.maxWeight}kg @ ¥${costPerKg}/kg + ¥${procFee || 0} fee`
+                });
+              }
+            }
           }
+        } else {
+          // YunTu style:
+          // col1 = country / Chinese country, col3 = weight range, col6 = RMB/kg, col7 = fee
+          for (let i = 2; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row || row.length < 7) continue;
+            const countryCell = row[1];
+            if (countryCell && countryCell !== 'Country/Region') {
+              const nc = normalizeCountry(countryCell);
+              if (nc) {
+                currentCountry = nc;
+                if (!ratesByCountry[currentCountry]) ratesByCountry[currentCountry] = [];
+              }
+            }
+            if (!currentCountry) continue;
 
-          const weightRange = row[3];
-          const costPerKg = row[6];
-          const fee = row[7];
-
-          if (currentCountry && weightRange && costPerKg !== undefined && costPerKg !== '') {
-            const parsed = parseWeightRange(weightRange.toString());
-            if (parsed) {
-              const normalized = currentCountry.toUpperCase();
-              ratesByCountry[normalized].push({
-                minWeight: parsed.minWeight,
-                maxWeight: parsed.maxWeight,
-                costPerKg: parseFloat(costPerKg),
-                fixedFee: parseFloat(fee) || 0,
-                details: `${parsed.minWeight}-${parsed.maxWeight}kg @ ¥${costPerKg}/kg + ¥${fee || 0} fee`
-              });
+            const rangeCell = row[3];
+            const costPerKg = row[6];
+            const fee = row[7];
+            if (rangeCell && costPerKg !== undefined && costPerKg !== '') {
+              const parsed = parseWeightRange(rangeCell);
+              if (parsed) {
+                ratesByCountry[currentCountry].push({
+                  minWeight: parsed.minWeight,
+                  maxWeight: parsed.maxWeight,
+                  costPerKg: parseFloat(costPerKg),
+                  fixedFee: parseFloat(fee) || 0,
+                  details: `${parsed.minWeight}-${parsed.maxWeight}kg @ ¥${costPerKg}/kg + ¥${fee || 0} fee`
+                });
+              }
             }
           }
         }
+
         return ratesByCountry;
       }
 
@@ -740,7 +811,7 @@
         return '';
       }
 
-      // ========= REMOTE SURCHARGE LOG (CARRIER EXCEL) =========
+      // ========= REMOTE SURCHARGE EXCEL =========
       function parseRemoteSurchargeSheet(data) {
         remoteSurchargeMap = {};
         if (!data || data.length < 2) return;
@@ -771,7 +842,7 @@
         }
       }
 
-      // ========= ANALYSIS =========
+      // ========= ANALYZE =========
       async function analyzeOrders() {
         clearError();
         const resultsContainer = document.getElementById('resultsContainer');
@@ -801,15 +872,15 @@
             const sheet = wb.Sheets[wb.SheetNames[0]];
             const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
-            const shippingLineNameGuess =
+            const shippingLineGuess =
               json[1] && json[1][0] ? json[1][0].toString().trim() : meta.name;
             const ratesByCountry = parseRateSheet(json);
-            const carrierKey = inferCarrierKeyFromString(meta.name + ' ' + shippingLineNameGuess);
+            const carrierKey = inferCarrierKeyFromString(meta.name + ' ' + shippingLineGuess);
             const countryCount = Object.keys(ratesByCountry).length;
 
             rateConfigs.push({
               fileName: meta.name,
-              shippingLineGuess: shippingLineNameGuess,
+              shippingLineGuess,
               carrierKey,
               ratesByCountry
             });
@@ -842,7 +913,7 @@
             );
           }
 
-          // Column detection via AI
+          // Column detection
           updateProgress(25, 'Detecting invoice columns…', 'AI column mapping');
           const orderSample = ordersData.slice(0, 5).map((r) => r.join('|')).join('\n');
           const colPrompt = `Identify column indices (0-based) in this Mrek orders data:
@@ -917,7 +988,6 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
           addStatusLog(`${allOrders.length} orders will be audited.`, 'success');
           updateProgress(55, 'Matching orders to carriers…', '');
 
-          // Audit results
           const results = {
             overcharge: [],
             undercharge: [],
@@ -954,7 +1024,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               continue;
             }
 
-            const countryKey = (order.country || '').toUpperCase();
+            const countryKey = normalizeCountry(order.country);
             const countryRates = config.ratesByCountry[countryKey];
             if (!countryRates || !countryRates.length) {
               results.invalid.push({
@@ -982,13 +1052,12 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             const expectedUSD = expectedCNY / exchangeRate;
             const diff = order.chargedUSD - expectedUSD;
 
-            // Remote logic (carrier vs Mrek only)
             const mrekRemoteUSD =
               order.remoteUSD || (order.remoteCNY ? order.remoteCNY / exchangeRate : 0);
             const mrekChargedRemote = mrekRemoteUSD > 0.01;
 
             let carrierRemoteRMB = 0;
-            if (remoteSurchargeMap[order.packageNumber]) {
+            if (!remoteSurchargeIsPdf && remoteSurchargeMap[order.packageNumber]) {
               carrierRemoteRMB = remoteSurchargeMap[order.packageNumber];
             }
             const carrierRemoteUSD = carrierRemoteRMB / exchangeRate;
@@ -1058,7 +1127,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
         }
       }
 
-      // ========= DASHBOARD =========
+      // ========= DASHBOARD & TABLES =========
       function renderDashboard(results) {
         const container = document.getElementById('resultsContainer');
         container.classList.remove('hidden');
@@ -1068,7 +1137,6 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
           results.undercharge.length +
           results.accurate.length +
           results.invalid.length;
-        const accurateOrders = results.accurate.length;
         const overchargeTotal = results.overcharge.reduce(
           (sum, o) => sum + parseFloat(o.difference),
           0
@@ -1096,9 +1164,8 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                   All uploaded shipping rate files were used (YunTu, Yanwen, etc.).
                 </div>
                 <div class="dashboard-subtext">
-                  No charges are hard-coded. All expected values are calculated from carrier rate sheets
-                  and compared to the Mrek invoice. Remote surcharges are checked against the carrier log
-                  if you uploaded it as Excel.
+                  No charges are hard-coded. Expected shipping is calculated from carrier rate sheets.
+                  Remote surcharges are compared between Mrek invoice and the carrier log (if Excel is uploaded).
                 </div>
               </div>
             </div>
@@ -1109,6 +1176,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <div class="summary-value">${totalOrders}</div>
                 <div class="summary-meta">
                   Accurate: <strong>${results.accurate.length}</strong>
+                  · Invalid: ${results.invalid.length}
                 </div>
               </div>
               <div class="summary-card">
@@ -1471,9 +1539,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
         URL.revokeObjectURL(url);
       }
 
-      window.addEventListener('DOMContentLoaded', () => {
-        // no special init
-      });
+      window.addEventListener('DOMContentLoaded', () => {});
     </script>
   </body>
 </html>
