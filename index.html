@@ -265,6 +265,11 @@
         font-size: 0.85rem;
         color: #64748b;
       }
+      .dashboard-subtext {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-top: 0.2rem;
+      }
       .summary-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -403,11 +408,6 @@
       .chip-remote-ok { background: #dcfce7; color: #166534; }
       .chip-remote-warn { background: #fef9c3; color: #854d0e; }
       .chip-remote-bad { background: #fee2e2; color: #b91c1c; }
-      .dashboard-subtext {
-        font-size: 0.75rem;
-        color: #9ca3af;
-        margin-top: 0.2rem;
-      }
     </style>
   </head>
   <body>
@@ -425,7 +425,7 @@
               </div>
               <div class="logo-text">
                 <h1>PuppyPad Shipping Auditor</h1>
-                <span>Audit shipping, surcharges & remote fees in one place.</span>
+                <span>Audit shipping, handling & remote fees against carriers.</span>
               </div>
             </div>
 
@@ -442,7 +442,7 @@
                   <div>
                     <div class="file-label-main">Upload carrier rate Excel files</div>
                     <div class="file-label-sub">
-                      YunTu, Yanwen etc. You can select multiple files.
+                      YunTu / Yanwen etc. You can select multiple files.
                     </div>
                   </div>
                 </div>
@@ -457,8 +457,8 @@
                 onchange="handleFileSelect('rates')"
               />
               <p class="helper-text">
-                <strong>Note:</strong> No rates are hard-coded in this app. Expected shipping costs
-                are only calculated from these uploaded carrier rate sheets.
+                <strong>Important:</strong> No shipping prices are hard-coded. The app only uses the
+                rates in these Excel files to calculate expected shipping costs.
               </p>
             </div>
 
@@ -475,7 +475,7 @@
                   <div>
                     <div class="file-label-main">Upload Mrek invoice (orders) Excel</div>
                     <div class="file-label-sub">
-                      Orders with shipping method, weight, shipping cost, handling & remote.
+                      Must include order ID, shipping method, weight, shipping cost, handling & remote.
                     </div>
                   </div>
                 </div>
@@ -501,9 +501,9 @@
                 <div class="file-primary">
                   <div class="file-icon">🚚</div>
                   <div>
-                    <div class="file-label-main">Upload carrier remote surcharge Excel</div>
+                    <div class="file-label-main">Upload carrier remote surcharge file</div>
                     <div class="file-label-sub">
-                      Export from YunTu / Yanwen remote area surcharge report.
+                      Excel is preferred. PDF is accepted but cannot be auto-read.
                     </div>
                   </div>
                 </div>
@@ -512,15 +512,18 @@
               <input
                 type="file"
                 id="remoteSurchargeFile"
-                accept=".xlsx,.xls"
+                accept=".xlsx,.xls,application/pdf"
                 style="display: none"
                 onchange="handleFileSelect('remoteSurcharge')"
               />
               <p class="helper-text">
-                This is the <strong>remote-area surcharge export</strong> from the carrier (e.g.
-                YunTu). It tells the app which customer orders/waybills the carrier actually
-                billed a remote fee for and the exact amount, so we can compare that with Mrek’s
-                invoice.
+                This is the <strong>remote-area surcharge export</strong> from the shipping carrier
+                (e.g. YunTu). It shows which customer orders/waybills were billed a remote fee and
+                the amount. The app compares this to Mrek's invoice.
+                <br />
+                <strong>Note:</strong> If you upload a PDF here, the audit still runs, but carrier
+                remote fees cannot be auto-read. To fully validate carrier vs Mrek remote amounts,
+                export this report as Excel/CSV from the carrier and upload that instead.
               </p>
             </div>
 
@@ -556,10 +559,11 @@
 
     <script>
       // ========= GLOBAL STATE =========
-      let rateFileMetas = []; // {file, name, config}
-      let ordersData = null;
-      let remoteSurchargeData = null;
-      let remoteSurchargeMap = {}; // key = customer order/ package number -> surcharge RMB
+      let rateFileMetas = [];        // {file, name, ratesByCountry, carrierKey}
+      let ordersData = null;         // 2D array from Mrek invoice
+      let remoteSurchargeData = null;// 2D array for carrier remote Excel
+      let remoteSurchargeMap = {};   // key = customer order / package number, value = surcharge RMB
+      let remoteSurchargeIsPdf = false;
       let resultsData = null;
 
       function showError(msg) {
@@ -597,15 +601,15 @@
             model: 'gpt-4o-mini',
             messages: [
               { role: 'system', content: 'Return ONLY valid JSON. No markdown, no explanation.' },
-              { role: 'user', content: prompt },
+              { role: 'user', content: prompt }
             ],
             temperature: 0,
-            max_tokens: 1000,
-          }),
+            max_tokens: 1000
+          })
         });
         if (!response.ok) {
-          const text = await response.text();
-          throw new Error(`OpenAI API failed: ${response.status} - ${text}`);
+          const txt = await response.text();
+          throw new Error(`OpenAI API failed: ${response.status} - ${txt}`);
         }
         const data = await response.json();
         const msg = data?.choices?.[0]?.message?.content;
@@ -619,7 +623,7 @@
         return JSON.parse(cleaned);
       }
 
-      // ========== FILE HANDLING ==========
+      // ========= FILE HANDLING =========
       function handleFileSelect(type) {
         clearError();
         const input =
@@ -636,9 +640,7 @@
           const label = document.getElementById('ratesCountLabel');
           const upload = document.getElementById('ratesUpload');
           upload.classList.add('has-file');
-          label.textContent = `${rateFileMetas.length} file${
-            rateFileMetas.length > 1 ? 's' : ''
-          }`;
+          label.textContent = `${rateFileMetas.length} file${rateFileMetas.length > 1 ? 's' : ''}`;
         } else if (type === 'orders') {
           const file = input.files[0];
           const reader = new FileReader();
@@ -653,14 +655,32 @@
           reader.readAsArrayBuffer(file);
         } else {
           const file = input.files[0];
+          remoteSurchargeIsPdf =
+            file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+          const upload = document.getElementById('remoteSurchargeUpload');
+          const label = document.getElementById('remoteSurchargeCountLabel');
+          upload.classList.add('has-file');
+          label.textContent = file.name;
+
+          if (remoteSurchargeIsPdf) {
+            // We can't parse PDF tables reliably here.
+            remoteSurchargeData = null;
+            remoteSurchargeMap = {};
+            addStatusLog(
+              'Remote surcharge log uploaded as PDF – carrier remote amounts cannot be auto-read. Audit will still run using Mrek invoice remote columns only.',
+              'info'
+            );
+            return;
+          }
+
           const reader = new FileReader();
           reader.onload = (e) => {
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, { type: 'array' });
             const sheet = wb.Sheets[wb.SheetNames[0]];
             remoteSurchargeData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-            document.getElementById('remoteSurchargeUpload').classList.add('has-file');
-            document.getElementById('remoteSurchargeCountLabel').textContent = file.name;
+            remoteSurchargeMap = {}; // will fill when analyzing
           };
           reader.readAsArrayBuffer(file);
         }
@@ -673,11 +693,12 @@
         if (!match) return null;
         return {
           minWeight: parseFloat(match[1]),
-          maxWeight: parseFloat(match[2]),
+          maxWeight: parseFloat(match[2])
         };
       }
 
       function parseRateSheet(jsonData) {
+        // Generic YunTu-style: Country in col0, Weight(KG) col3, RMB/kg col6, fee col7
         const ratesByCountry = {};
         let currentCountry = null;
 
@@ -704,9 +725,7 @@
                 maxWeight: parsed.maxWeight,
                 costPerKg: parseFloat(costPerKg),
                 fixedFee: parseFloat(fee) || 0,
-                details: `${parsed.minWeight}-${parsed.maxWeight}kg @ ¥${costPerKg}/kg + ¥${
-                  fee || 0
-                } fee`,
+                details: `${parsed.minWeight}-${parsed.maxWeight}kg @ ¥${costPerKg}/kg + ¥${fee || 0} fee`
               });
             }
           }
@@ -721,7 +740,7 @@
         return '';
       }
 
-      // ========= REMOTE SURCHARGE LOG (CARRIER) =========
+      // ========= REMOTE SURCHARGE LOG (CARRIER EXCEL) =========
       function parseRemoteSurchargeSheet(data) {
         remoteSurchargeMap = {};
         if (!data || data.length < 2) return;
@@ -730,13 +749,13 @@
         let amountIdx = -1;
 
         header.forEach((h, idx) => {
-          if (h.includes('客户单号')) customerIdx = idx;      // customer order no
-          if (h.includes('偏远附加费')) amountIdx = idx;      // remote surcharge RMB
+          if (h.includes('客户单号')) customerIdx = idx;
+          if (h.includes('偏远附加费')) amountIdx = idx;
         });
 
         if (customerIdx === -1 || amountIdx === -1) {
           addStatusLog(
-            'Remote surcharge log: could not detect 客户单号 / 偏远附加费 columns. Skipping carrier-remote comparison.',
+            'Remote surcharge log Excel: could not detect 客户单号 / 偏远附加费 columns. Skipping carrier-remote comparison.',
             'info'
           );
           return;
@@ -752,7 +771,7 @@
         }
       }
 
-      // ========= ANALYZE =========
+      // ========= ANALYSIS =========
       async function analyzeOrders() {
         clearError();
         const resultsContainer = document.getElementById('resultsContainer');
@@ -774,7 +793,6 @@
 
           updateProgress(5, 'Loading carrier rate files…', '');
 
-          // Load & parse all rate files
           const rateConfigs = [];
           for (let idx = 0; idx < rateFileMetas.length; idx++) {
             const meta = rateFileMetas[idx];
@@ -793,7 +811,7 @@
               fileName: meta.name,
               shippingLineGuess: shippingLineNameGuess,
               carrierKey,
-              ratesByCountry,
+              ratesByCountry
             });
 
             addStatusLog(
@@ -804,22 +822,27 @@
 
           if (!rateConfigs.length) throw new Error('No valid rate tables found in uploaded files.');
 
-          // Remote surcharge log
-          if (remoteSurchargeData) {
+          // Remote surcharge Excel
+          if (remoteSurchargeData && !remoteSurchargeIsPdf) {
             parseRemoteSurchargeSheet(remoteSurchargeData);
             const countKeys = Object.keys(remoteSurchargeMap).length;
             addStatusLog(
               `Loaded carrier remote surcharge entries for ${countKeys} customer order IDs.`,
               'success'
             );
+          } else if (remoteSurchargeIsPdf) {
+            addStatusLog(
+              'Remote surcharge log is PDF – carrier remote fees are NOT parsed. Only Mrek invoice remote amounts will be used.',
+              'info'
+            );
           } else {
             addStatusLog(
-              'No Remote Surcharge Log uploaded – will only use remote charges from Mrek invoice.',
+              'No Remote Surcharge Log uploaded – only Mrek invoice remote amounts will be used.',
               'info'
             );
           }
 
-          // AI column detection for orders
+          // Column detection via AI
           updateProgress(25, 'Detecting invoice columns…', 'AI column mapping');
           const orderSample = ordersData.slice(0, 5).map((r) => r.join('|')).join('\n');
           const colPrompt = `Identify column indices (0-based) in this Mrek orders data:
@@ -845,6 +868,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
           const colMap = extractJSON(colResponse);
           addStatusLog(`Column map detected: ${JSON.stringify(colMap)}`, 'info');
 
+          // Parse orders
           updateProgress(40, 'Parsing Mrek orders…', '');
           const allOrders = [];
           const getVal = (row, idx) =>
@@ -853,6 +877,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
           for (let i = 1; i < ordersData.length; i++) {
             const row = ordersData[i];
             if (!row) continue;
+
             const orderId = (getVal(row, colMap.orderIdCol) || '').toString().trim();
             if (!orderId) continue;
 
@@ -868,7 +893,6 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             const handlingCNY = parseFloat(getVal(row, colMap.handlingCnyCol)) || 0;
             const remoteUSD = parseFloat(getVal(row, colMap.remoteUsdCol)) || 0;
             const remoteCNY = parseFloat(getVal(row, colMap.remoteCnyCol)) || 0;
-
             const packageNumber = (getVal(row, colMap.packageNumberCol) || '')
               .toString()
               .trim();
@@ -886,7 +910,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               handlingCNY,
               remoteUSD,
               remoteCNY,
-              packageNumber,
+              packageNumber
             });
           }
 
@@ -899,7 +923,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             undercharge: [],
             accurate: [],
             invalid: [],
-            remoteOrders: [],
+            remoteOrders: []
           };
 
           function pickRateConfigForOrder(order) {
@@ -908,9 +932,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               const match = rateConfigs.find((c) => c.carrierKey === orderCarrier);
               if (match) return match;
             }
-            // fallback: if only one config, use it
             if (rateConfigs.length === 1) return rateConfigs[0];
-            // otherwise no clear match
             return null;
           }
 
@@ -927,7 +949,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             if (!config) {
               results.invalid.push({
                 ...order,
-                reason: `No matching rate sheet for shipping method "${order.shippingLine}"`,
+                reason: `No matching rate sheet for shipping method "${order.shippingLine}"`
               });
               continue;
             }
@@ -937,7 +959,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             if (!countryRates || !countryRates.length) {
               results.invalid.push({
                 ...order,
-                reason: `No rate row for country "${order.country}" in rate file "${config.fileName}"`,
+                reason: `No rate row for country "${order.country}" in rate file "${config.fileName}"`
               });
               continue;
             }
@@ -946,26 +968,27 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               (b) => order.totalWeight > b.minWeight && order.totalWeight <= b.maxWeight
             );
             if (!bracket) {
-              const ranges = countryRates.map((b) => `${b.minWeight}-${b.maxWeight}`).join(', ');
+              const ranges = countryRates
+                .map((b) => `${b.minWeight}-${b.maxWeight}`)
+                .join(', ');
               results.invalid.push({
                 ...order,
-                reason: `Weight ${order.totalWeight}kg out of range for ${order.country} in file "${config.fileName}". Ranges: ${ranges}`,
+                reason: `Weight ${order.totalWeight}kg out of range for ${order.country} in file "${config.fileName}". Ranges: ${ranges}`
               });
               continue;
             }
 
-            // Expected base shipping cost from rate sheet (no hard-coded numbers)
             const expectedCNY = order.totalWeight * bracket.costPerKg + bracket.fixedFee;
             const expectedUSD = expectedCNY / exchangeRate;
             const diff = order.chargedUSD - expectedUSD;
 
-            // Remote logic: only compare Mrek vs Carrier based on logs
+            // Remote logic (carrier vs Mrek only)
             const mrekRemoteUSD =
               order.remoteUSD || (order.remoteCNY ? order.remoteCNY / exchangeRate : 0);
             const mrekChargedRemote = mrekRemoteUSD > 0.01;
 
             let carrierRemoteRMB = 0;
-            if (order.packageNumber && remoteSurchargeMap[order.packageNumber]) {
+            if (remoteSurchargeMap[order.packageNumber]) {
               carrierRemoteRMB = remoteSurchargeMap[order.packageNumber];
             }
             const carrierRemoteUSD = carrierRemoteRMB / exchangeRate;
@@ -980,9 +1003,12 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               remoteStatus = '✅ Carrier & Mrek both charged remote';
             } else if (carrierChargedRemote && !mrekChargedRemote) {
               remoteStatus = '⚠ Carrier charged remote, Mrek did NOT pass it';
-            } else if (!carrierChargedRemote && mrekChargedRemote) {
+            } else if (!carrierChargedRemote && mrekChargedRemote && !remoteSurchargeIsPdf) {
               remoteStatus =
                 '❌ Mrek charged remote but carrier log shows no remote surcharge for this order';
+            } else if (!carrierChargedRemote && mrekChargedRemote && remoteSurchargeIsPdf) {
+              remoteStatus =
+                '⚠ Mrek charged remote (carrier log is PDF, so carrier remote is unknown)';
             }
 
             const processed = {
@@ -997,7 +1023,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               handlingUSD: handlingUSD.toFixed(2),
               totalChargedUSD: totalChargedUSD.toFixed(2),
               remoteStatus,
-              rateFileName: config.fileName,
+              rateFileName: config.fileName
             };
 
             if (carrierChargedRemote || mrekChargedRemote) {
@@ -1007,7 +1033,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             if (isNaN(diff)) {
               results.invalid.push({
                 ...processed,
-                reason: 'Invalid difference calculation (NaN)',
+                reason: 'Invalid difference calculation (NaN)'
               });
             } else if (Math.abs(diff) < 0.01) {
               results.accurate.push(processed);
@@ -1050,7 +1076,6 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
         const underchargeTotal = Math.abs(
           results.undercharge.reduce((sum, o) => sum + parseFloat(o.difference), 0)
         );
-        const accuracyPct = totalOrders ? ((accurateOrders / totalOrders) * 100).toFixed(1) : '0.0';
 
         const remoteOk = results.remoteOrders.filter((o) =>
           o.remoteStatus.startsWith('✅')
@@ -1068,10 +1093,12 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               <div class="dashboard-title-wrap">
                 <div class="dashboard-title">Audit Results</div>
                 <div class="dashboard-subtitle">
-                  All uploaded shipping rate files were used to match carriers (YunTu, Yanwen, etc.)
+                  All uploaded shipping rate files were used (YunTu, Yanwen, etc.).
                 </div>
                 <div class="dashboard-subtext">
-                  No rates or surcharges are hard-coded. All values are calculated strictly from the uploaded Excel files.
+                  No charges are hard-coded. All expected values are calculated from carrier rate sheets
+                  and compared to the Mrek invoice. Remote surcharges are checked against the carrier log
+                  if you uploaded it as Excel.
                 </div>
               </div>
             </div>
@@ -1081,7 +1108,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <div class="summary-label">Orders Audited</div>
                 <div class="summary-value">${totalOrders}</div>
                 <div class="summary-meta">
-                  <span class="badge success">Accurate: ${accurateOrders}</span>
+                  Accurate: <strong>${results.accurate.length}</strong>
                 </div>
               </div>
               <div class="summary-card">
@@ -1098,17 +1125,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <div class="summary-label">Remote Orders</div>
                 <div class="summary-value">${results.remoteOrders.length}</div>
                 <div class="summary-meta">
-                  <span class="badge ${
-                    remoteBad > 0 ? 'error' : remoteWarn > 0 ? 'warn' : 'success'
-                  }">
-                    ${
-                      remoteBad > 0
-                        ? `${remoteBad} mismatches vs carrier`
-                        : remoteWarn > 0
-                        ? `${remoteWarn} warnings`
-                        : 'All remote charges consistent'
-                    }
-                  </span>
+                  OK: ${remoteOk} · Warnings: ${remoteWarn} · Mismatches: ${remoteBad}
                 </div>
               </div>
             </div>
@@ -1129,7 +1146,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <div class="card-header">
                   <div>
                     <div class="card-title">Remote Surcharge Alignment</div>
-                    <div class="card-subtitle">How Mrek vs Carrier remote fees line up</div>
+                    <div class="card-subtitle">How Mrek vs carrier remote fees line up</div>
                   </div>
                 </div>
                 <div class="chart-wrap">
@@ -1172,7 +1189,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <div class="card-header">
                   <div>
                     <div class="card-title">Remote Audit Table</div>
-                    <div class="card-subtitle">One row for every order with any remote fee</div>
+                    <div class="card-subtitle">All orders where either Mrek or carrier charged remote</div>
                   </div>
                   <button class="pill-btn" onclick="downloadExcel('remoteOrders')">
                     ⬇ Download Remote Orders
@@ -1200,49 +1217,39 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                   results.overcharge.length,
                   results.undercharge.length,
                   results.accurate.length,
-                  results.invalid.length,
+                  results.invalid.length
                 ],
-                backgroundColor: ['#f97316', '#22c55e', '#0ea5e9', '#9ca3af'],
-              },
-            ],
+                backgroundColor: ['#f97316', '#22c55e', '#0ea5e9', '#9ca3af']
+              }
+            ]
           },
           options: {
             plugins: {
               legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 11 } } },
-              tooltip: { enabled: true },
+              tooltip: { enabled: true }
             },
-            cutout: '60%',
-          },
+            cutout: '60%'
+          }
         });
-
-        const remoteOk = results.remoteOrders.filter((o) =>
-          o.remoteStatus.startsWith('✅')
-        ).length;
-        const remoteWarn = results.remoteOrders.filter((o) =>
-          o.remoteStatus.startsWith('⚠')
-        ).length;
-        const remoteBad = results.remoteOrders.filter((o) =>
-          o.remoteStatus.startsWith('❌')
-        ).length;
 
         new Chart(ctx2, {
           type: 'bar',
           data: {
-            labels: ['OK (Carrier & Mrek)', 'Warnings', 'Mismatches'],
+            labels: ['OK', 'Warnings', 'Mismatches'],
             datasets: [
               {
                 data: [remoteOk, remoteWarn, remoteBad],
-                backgroundColor: ['#22c55e', '#eab308', '#ef4444'],
-              },
-            ],
+                backgroundColor: ['#22c55e', '#eab308', '#ef4444']
+              }
+            ]
           },
           options: {
             plugins: { legend: { display: false }, tooltip: { enabled: true } },
             scales: {
               x: { ticks: { font: { size: 11 } } },
-              y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } },
-            },
-          },
+              y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } }
+            }
+          }
         });
       }
 
@@ -1253,7 +1260,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
             ...results.overcharge,
             ...results.undercharge,
             ...results.accurate,
-            ...results.invalid,
+            ...results.invalid
           ];
         } else {
           rows = results[filter] || [];
@@ -1269,7 +1276,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
                 <th>Order #</th>
                 <th>Country</th>
                 <th>State / ZIP</th>
-                <th>Carrier Rate File</th>
+                <th>Rate File</th>
                 <th>Weight (kg)</th>
                 <th>Ship (USD)</th>
                 <th>Handling (USD)</th>
@@ -1390,7 +1397,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               'Ship CNY',
               'Ship USD',
               'Shipping Method',
-              'Reason',
+              'Reason'
             ]
           : [
               'Order ID',
@@ -1410,7 +1417,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               'Bracket',
               'Remote Status',
               'Shipping Method',
-              'Rate File',
+              'Rate File'
             ];
 
         worksheet.addRow(headers).font = { bold: true };
@@ -1426,7 +1433,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               o.chargedCNY || 0,
               o.chargedUSD || 0,
               o.shippingLine || '',
-              o.reason || '',
+              o.reason || ''
             ]);
           } else {
             worksheet.addRow([
@@ -1447,14 +1454,14 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
               o.bracket || '',
               o.remoteStatus || '',
               o.shippingLine || '',
-              o.rateFileName || '',
+              o.rateFileName || ''
             ]);
           }
         });
 
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1465,7 +1472,7 @@ Return ONLY JSON with integer indices (or -1 if not present) for:
       }
 
       window.addEventListener('DOMContentLoaded', () => {
-        // nothing special on load for now
+        // no special init
       });
     </script>
   </body>
